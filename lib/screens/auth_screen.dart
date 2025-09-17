@@ -15,6 +15,7 @@ class _AuthScreenState extends State<AuthScreen>
     with SingleTickerProviderStateMixin {
   bool isLogin = true;
   bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
 
@@ -37,6 +38,15 @@ class _AuthScreenState extends State<AuthScreen>
     _slideAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    _loadPreviousUser();
+  }
+
+  Future<void> _loadPreviousUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final previousUser = prefs.getString('username');
+    if (previousUser != null) {
+      _emailController.text = previousUser;
+    }
   }
 
   @override
@@ -58,6 +68,11 @@ class _AuthScreenState extends State<AuthScreen>
       }
       isLogin = !isLogin;
     });
+    // Kosongkan controller saat beralih mode
+    _emailController.clear();
+    _passwordController.clear();
+    _confirmPasswordController.clear();
+    _usernameController.clear();
   }
 
   Future<void> _handleSubmit() async {
@@ -66,7 +81,6 @@ class _AuthScreenState extends State<AuthScreen>
 
       try {
         if (isLogin) {
-          // Handle Login
           final isRegistered =
               await _authService.isUserRegistered(_emailController.text);
           if (!isRegistered) {
@@ -82,12 +96,11 @@ class _AuthScreenState extends State<AuthScreen>
           if (success) {
             final prefs = await SharedPreferences.getInstance();
             String username = _emailController.text.trim();
-
-            // Extract name from email if it's a gmail address
             if (username.contains('@gmail.com')) {
               username = username.split('@').first;
             }
 
+            // Simpan status login
             await prefs.setBool('isLoggedIn', true);
             await prefs.setString('username', username);
 
@@ -101,7 +114,6 @@ class _AuthScreenState extends State<AuthScreen>
             _showError('Invalid username/email or password');
           }
         } else {
-          // Handle Registration
           await _authService.register(
             _usernameController.text,
             _emailController.text,
@@ -136,12 +148,6 @@ class _AuthScreenState extends State<AuthScreen>
     );
   }
 
-  void _navigateToHome() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,24 +161,21 @@ class _AuthScreenState extends State<AuthScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 40),
-                  // Add Logo
                   Hero(
-                    tag: 'app_logo',
-                    child: Container(
-                      height: 120,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          image: AssetImage('assets/images/logo.png'),
-                          fit: BoxFit.cover,
-                        ),
+                    tag: 'logo',
+                    child: SizedBox(
+                      height: 100,
+                      width: 100,
+                      child: CircleAvatar(
+                        backgroundColor: Colors.white,
+                        backgroundImage: AssetImage('assets/images/logo.png'),
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     isLogin ? 'Welcome Back!' : 'Create Account',
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -180,6 +183,7 @@ class _AuthScreenState extends State<AuthScreen>
                   const SizedBox(height: 8),
                   Text(
                     isLogin ? 'Sign in to continue' : 'Register to get started',
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: Colors.grey,
                         ),
@@ -189,6 +193,7 @@ class _AuthScreenState extends State<AuthScreen>
                     animation: _slideAnimation,
                     builder: (context, child) {
                       return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           if (!isLogin) ...[
                             TextFormField(
@@ -258,6 +263,22 @@ class _AuthScreenState extends State<AuthScreen>
                               return null;
                             },
                           ),
+                          if (isLogin)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ForgotPasswordScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Forgot Password?'),
+                              ),
+                            ),
                           if (!isLogin) ...[
                             const SizedBox(height: 16),
                             SlideTransition(
@@ -267,10 +288,23 @@ class _AuthScreenState extends State<AuthScreen>
                               ).animate(_slideAnimation),
                               child: TextFormField(
                                 controller: _confirmPasswordController,
-                                obscureText: !_passwordVisible,
+                                obscureText: !_confirmPasswordVisible,
                                 decoration: InputDecoration(
                                   labelText: 'Confirm Password',
                                   prefixIcon: const Icon(Icons.lock),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _confirmPasswordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _confirmPasswordVisible =
+                                            !_confirmPasswordVisible;
+                                      });
+                                    },
+                                  ),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -306,23 +340,6 @@ class _AuthScreenState extends State<AuthScreen>
                                   : 'Already have an account? Login',
                             ),
                           ),
-                          if (isLogin) ...[
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ForgotPasswordScreen(),
-                                    ),
-                                  );
-                                },
-                                child: const Text('Forgot Password?'),
-                              ),
-                            ),
-                          ],
                         ],
                       );
                     },

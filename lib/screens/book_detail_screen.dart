@@ -18,18 +18,28 @@ class BookDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(
-              book.imageUrl,
-              height: 300,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const SizedBox(
-                  height: 300,
-                  child: Center(child: Icon(Icons.book, size: 50)),
-                );
-              },
-            ),
+            // Handle cases where imageUrl might be empty or null
+            book.imageUrl.isNotEmpty
+                ? Image.network(
+                    book.imageUrl,
+                    height: 300,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const SizedBox(
+                        height: 300,
+                        child: Center(
+                          child: Icon(Icons.book, size: 50),
+                        ),
+                      );
+                    },
+                  )
+                : const SizedBox(
+                    height: 300,
+                    child: Center(
+                      child: Icon(Icons.book, size: 50),
+                    ),
+                  ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -41,7 +51,8 @@ class BookDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'by ${book.author}',
+                    // Fallback for author field
+                    'by ${book.author.isNotEmpty ? book.author : 'Unknown Author'}',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
@@ -55,7 +66,8 @@ class BookDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    book.description,
+                    // Fallback for description field
+                    book.description.isNotEmpty ? book.description : 'No description available.',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ],

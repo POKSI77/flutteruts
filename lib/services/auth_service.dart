@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 class AuthService {
   static const String _usersKey = 'users';
   static const String _currentUserKey = 'currentUser';
+  static const String _isLoggedInKey = 'isLoggedIn'; // Kunci baru
   final _uuid = const Uuid();
 
   // Singleton pattern
@@ -70,8 +71,14 @@ class AuthService {
       });
 
       if (matched) {
-        // simpan session
-        await prefs.setString(_currentUserKey, usernameOrEmail);
+        String usernameToStore = usernameOrEmail;
+        if (usernameToStore.contains('@')) {
+          usernameToStore = usernameToStore.split('@').first;
+        }
+        
+        // Simpan status login dan username yang sudah bersih
+        await prefs.setBool(_isLoggedInKey, true);
+        await prefs.setString(_currentUserKey, usernameToStore);
       }
 
       return matched;
@@ -83,13 +90,14 @@ class AuthService {
   /// ==================== LOGOUT ====================
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_isLoggedInKey);
     await prefs.remove(_currentUserKey);
   }
 
   /// ==================== CHECK SESSION ====================
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_currentUserKey) != null;
+    return prefs.getBool(_isLoggedInKey) ?? false;
   }
 
   Future<String?> getCurrentUser() async {
