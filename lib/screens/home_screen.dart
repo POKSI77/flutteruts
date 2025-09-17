@@ -8,6 +8,7 @@ import 'book_detail_screen.dart';
 import 'auth_screen.dart';
 import '../services/auth_service.dart';
 import '../models/cart_model.dart';
+import 'special_books_screen.dart';
 
 // Home Screen
 class HomeScreen extends StatefulWidget {
@@ -26,13 +27,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   
   // Ganti data buku yang ada dengan data yang Anda inginkan
-  final List<Book> books = const [
+  final List<Book> books = [
     Book(
       id: '1',
       title: 'Seporsi Mie Ayam Sebelum Mati',
       author: 'Brian Khrisna',
       price: 9.99,
-      imageUrl: 'https://cdn.gramedia.com/uploads/items/9786230043881.jpg',
+      imageUrl: 'https://image.gramedia.net/rs:fit:0:0/plain/https://cdn.gramedia.com/uploads/products/95ob5m98ur.jpg',
       description: 'A story of decadence and excess...',
     ),
     Book(
@@ -40,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
       title: '3726',
       author: 'A. Fuadi',
       price: 12.99,
-      imageUrl: 'https://cdn.gramedia.com/uploads/items/3726__w600_h_auto.jpg',
+      imageUrl: 'https://cdn.gramedia.com/uploads/products/9397p4603v.jpg',
       description: 'A dystopian social science fiction...',
     ),
     Book(
@@ -48,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'Gerbang Dialog Danur',
       author: 'Risa Saraswati',
       price: 12.99,
-      imageUrl: 'https://cdn.gramedia.com/uploads/items/gerbang_dialog_danur__w600_h_auto.jpg',
+      imageUrl: 'https://static.mizanstore.com/d/img/book/cover/covBK001247.jpg',
       description: 'A dystopian social science fiction...',
     ),
     Book(
@@ -56,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'Dilan: Dia Adalah Dilanku Tahun 1990',
       author: 'Pidi Baiq',
       price: 12.99,
-      imageUrl: 'https://cdn.gramedia.com/uploads/items/dilan-1990__w600_h_auto.jpg',
+      imageUrl: 'https://upload.wikimedia.org/wikipedia/id/1/19/Dilan_1990_%28poster%29.jpg',
       description: 'A dystopian social science fiction...',
     ),
     Book(
@@ -64,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
       title: 'The Catcher in the Rye',
       author: 'J.D. Salinger',
       price: 8.75,
-      imageUrl: 'https://example.com/catcher.jpg',
+      imageUrl: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1398034300i/5107.jpg',
       description:
           'A novel about a teenager named Holden Caulfield and his journey through New York City.',
     ),
@@ -137,6 +138,18 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Bookstore'),
         actions: [
+          // Tombol baru untuk layar buku spesial
+          IconButton(
+            icon: const Icon(Icons.star),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>  SpecialBooksScreen(),
+                ),
+              );
+            },
+          ),
           Consumer<CartModel>(
             builder: (context, cart, child) {
               return IconButton(
@@ -270,18 +283,6 @@ class BookCard extends StatelessWidget {
                       stops: const [0.5, 1.0],
                     ),
                   ),
-                ),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.favorite_border, size: 20),
                 ),
               ),
               Positioned(
