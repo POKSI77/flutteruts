@@ -1,80 +1,100 @@
-// Cart Screen
+// lib/screens/cart_screen.dart
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/book.dart';
+import '../models/cart_model.dart';
+import '../models/special_book.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({
     Key? key,
-    this.cartItems = const [],
-    this.onRemoveFromCart,
   }) : super(key: key);
-
-  final List<Book> cartItems;
-  final Function(Book)? onRemoveFromCart;
-
-  double get totalPrice {
-    return cartItems.fold(
-        0.0, (sum, item) => sum + (item.price * item.quantity));
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Cart (${cartItems.length})',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Color(0xFF667eea),
+        title: Consumer<CartModel>(
+          builder: (context, cart, child) {
+            return Text(
+              'Cart (${cart.items.length})',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            );
+          },
+        ),
+        backgroundColor: const Color(0xFF667eea),
         elevation: 0,
         actions: [
-          if (cartItems.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.clear_all),
-              onPressed: () {
-                // Clear all cart items
-              },
-            ),
+          Consumer<CartModel>(
+            builder: (context, cart, child) {
+              if (cart.items.isNotEmpty) {
+                return IconButton(
+                  icon: const Icon(Icons.clear_all),
+                  onPressed: () {
+                    cart.clearCart();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Cart cleared!'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
         ],
       ),
-      body: cartItems.isEmpty
-          ? Center(
+      body: Consumer<CartModel>(
+        builder: (context, cart, child) {
+          if (cart.items.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_cart_outlined,
+                  const Icon(Icons.shopping_cart_outlined,
                       size: 100, color: Colors.grey),
-                  SizedBox(height: 20),
-                  Text(
+                  const SizedBox(height: 20),
+                  const Text(
                     'Your cart is empty',
                     style: TextStyle(fontSize: 20, color: Colors.grey),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
                     'Add some books to get started!',
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                 ],
               ),
-            )
-          : Column(
+            );
+          } else {
+            final totalPrice = cart.items.fold(
+              0.0,
+              (sum, item) => sum + (item.getDisplayPriceValue() * item.quantity),
+            );
+
+            return Column(
               children: [
                 Expanded(
                   child: ListView.builder(
-                    padding: EdgeInsets.all(15),
-                    itemCount: cartItems.length,
+                    padding: const EdgeInsets.all(15),
+                    itemCount: cart.items.length,
                     itemBuilder: (context, index) {
-                      final book = cartItems[index];
+                      final book = cart.items[index];
                       return CartItemCard(
                         book: book,
-                        onRemove: onRemoveFromCart ?? (Book _) {},
+                        onRemove: () => cart.removeItem(book),
+                        onIncrement: () => cart.incrementQuantity(book),
+                        onDecrement: () => cart.decrementQuantity(book),
                       );
                     },
                   ),
                 ),
-
-                // Checkout Section
                 Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
@@ -89,14 +109,14 @@ class CartScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Total:',
                             style: TextStyle(
                                 fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                           Text(
                             'Rp ${totalPrice.toStringAsFixed(0)}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF667eea),
@@ -104,45 +124,44 @@ class CartScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 15),
+                      const SizedBox(height: 15),
                       ElevatedButton(
                         onPressed: () {
-                          // Handle checkout
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text('Checkout'),
-                              content: Text('Proceed to payment?'),
+                              title: const Text('Checkout'),
+                              content: const Text('Proceed to payment?'),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancel'),
+                                  child: const Text('Cancel'),
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.pop(context);
+                                    cart.clearCart();
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content:
-                                            Text('Order placed successfully!'),
+                                      const SnackBar(
+                                        content: Text('Order placed successfully!'),
                                         backgroundColor: Colors.green,
                                       ),
                                     );
                                   },
-                                  child: Text('Confirm'),
+                                  child: const Text('Confirm'),
                                 ),
                               ],
                             ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF667eea),
-                          minimumSize: Size(double.infinity, 50),
+                          backgroundColor: const Color(0xFF667eea),
+                          minimumSize: const Size(double.infinity, 50),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Checkout',
                           style: TextStyle(
                             fontSize: 16,
@@ -155,19 +174,26 @@ class CartScreen extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
+            );
+          }
+        },
+      ),
     );
   }
 }
 
 class CartItemCard extends StatelessWidget {
   final Book book;
-  final Function(Book) onRemove;
+  final VoidCallback onRemove;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
 
   const CartItemCard({
     Key? key,
     required this.book,
     required this.onRemove,
+    required this.onIncrement,
+    required this.onDecrement,
   }) : super(key: key);
 
   @override
@@ -205,18 +231,35 @@ class CartItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Rp ${book.price.toStringAsFixed(0)}',
+                    book.getDisplayPrice(),
                     style: TextStyle(
                       color: Theme.of(context).primaryColor,
                       fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove, size: 20),
+                        onPressed: onDecrement,
+                      ),
+                      Text(
+                        '${book.quantity}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add, size: 20),
+                        onPressed: onIncrement,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              onPressed: () => onRemove(book),
+              onPressed: onRemove,
               color: Colors.red,
             ),
           ],

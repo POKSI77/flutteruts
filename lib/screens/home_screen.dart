@@ -9,6 +9,9 @@ import 'auth_screen.dart';
 import '../services/auth_service.dart';
 import '../models/cart_model.dart';
 import 'special_books_screen.dart';
+import '../models/special_book.dart';
+import '../models/special_book_model.dart';
+
 
 // Home Screen
 class HomeScreen extends StatefulWidget {
@@ -26,21 +29,21 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   
-  // Ganti data buku yang ada dengan data yang Anda inginkan
   final List<Book> books = [
     Book(
       id: '1',
       title: 'Seporsi Mie Ayam Sebelum Mati',
       author: 'Brian Khrisna',
-      price: 9.99,
+      price: 80000,
       imageUrl: 'https://image.gramedia.net/rs:fit:0:0/plain/https://cdn.gramedia.com/uploads/products/95ob5m98ur.jpg',
       description: 'A story of decadence and excess...',
     ),
-    Book(
+    PremiumBook(
       id: '2',
       title: '3726',
       author: 'A. Fuadi',
-      price: 12.99,
+      price: 15,
+      bonusPrice: 5,
       imageUrl: 'https://cdn.gramedia.com/uploads/products/9397p4603v.jpg',
       description: 'A dystopian social science fiction...',
     ),
@@ -48,15 +51,16 @@ class _HomeScreenState extends State<HomeScreen> {
       id: '3',
       title: 'Gerbang Dialog Danur',
       author: 'Risa Saraswati',
-      price: 12.99,
+      price: 12,
       imageUrl: 'https://static.mizanstore.com/d/img/book/cover/covBK001247.jpg',
       description: 'A dystopian social science fiction...',
     ),
-    Book(
+    SaleBook(
       id: '4',
       title: 'Dilan: Dia Adalah Dilanku Tahun 1990',
       author: 'Pidi Baiq',
-      price: 12.99,
+      price: 12,
+      discountPercentage: 20,
       imageUrl: 'https://upload.wikimedia.org/wikipedia/id/1/19/Dilan_1990_%28poster%29.jpg',
       description: 'A dystopian social science fiction...',
     ),
@@ -64,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
       id: '5',
       title: 'The Catcher in the Rye',
       author: 'J.D. Salinger',
-      price: 8.75,
+      price: 8,
       imageUrl: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1398034300i/5107.jpg',
       description:
           'A novel about a teenager named Holden Caulfield and his journey through New York City.',
@@ -136,17 +140,48 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PokBook'),
+        title: const Text('Bookstore'),
         actions: [
-          // Tombol baru untuk layar buku spesial
-          IconButton(
-            icon: const Icon(Icons.star),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>  SpecialBooksScreen(),
+          Consumer<SpecialBookModel>(
+            builder: (context, specialBookModel, child) {
+              return IconButton(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.star, color: Colors.yellow),
+                    if (specialBookModel.items.isNotEmpty)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '${specialBookModel.items.length}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SpecialBooksScreen(),
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -205,11 +240,9 @@ class _HomeScreenState extends State<HomeScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
-              // ignore: deprecated_member_use
               color: Theme.of(context).primaryColor.withOpacity(0.1),
               border: Border(
                 bottom: BorderSide(
-                  // ignore: deprecated_member_use
                   color: Theme.of(context).primaryColor.withOpacity(0.2),
                 ),
               ),
@@ -243,10 +276,74 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class BookCard extends StatelessWidget {
+class BookCard extends StatefulWidget {
   final Book book;
 
   const BookCard({Key? key, required this.book}) : super(key: key);
+
+  @override
+  State<BookCard> createState() => _BookCardState();
+}
+
+class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
+  late AnimationController _animationControllerStar;
+  late Animation<double> _scaleAnimationStar;
+  late AnimationController _animationControllerCart;
+  late Animation<double> _scaleAnimationCart;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationControllerStar = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnimationStar = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _animationControllerStar,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    _animationControllerCart = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnimationCart = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _animationControllerCart,
+        curve: Curves.easeOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationControllerStar.dispose();
+    _animationControllerCart.dispose();
+    super.dispose();
+  }
+
+  void _toggleSpecial(Book book, SpecialBookModel specialBookModel) {
+    if (specialBookModel.items.contains(book)) {
+      specialBookModel.removeItem(book);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} removed from special books!'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    } else {
+      specialBookModel.addItem(book);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} added to special books!'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+      _animationControllerStar.forward().then((_) => _animationControllerStar.reverse());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +355,7 @@ class BookCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => BookDetailScreen(book: book),
+              builder: (context) => BookDetailScreen(book: widget.book),
             ),
           );
         },
@@ -267,7 +364,7 @@ class BookCard extends StatelessWidget {
           child: Stack(
             children: [
               Image.network(
-                book.imageUrl,
+                widget.book.imageUrl,
                 height: double.infinity,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -281,11 +378,30 @@ class BookCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      // ignore: deprecated_member_use
                       colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                       stops: const [0.5, 1.0],
                     ),
                   ),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Consumer<SpecialBookModel>(
+                  builder: (context, specialBookModel, child) {
+                    bool isSpecial = specialBookModel.items.contains(widget.book);
+                    return GestureDetector(
+                      onTap: () => _toggleSpecial(widget.book, specialBookModel),
+                      child: ScaleTransition(
+                        scale: _scaleAnimationStar,
+                        child: Icon(
+                          isSpecial ? Icons.star : Icons.star_border,
+                          color: isSpecial ? Colors.yellow : Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
               Positioned(
@@ -296,7 +412,7 @@ class BookCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      book.title,
+                      widget.book.title,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -307,7 +423,7 @@ class BookCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      book.author,
+                      widget.book.author,
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
@@ -318,25 +434,28 @@ class BookCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Rp ${book.price.toStringAsFixed(2)}',
+                          widget.book.getDisplayPrice(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        // Ganti tombol share dengan tombol keranjang
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: IconButton(
-                            icon: const Icon(Icons.shopping_cart, color: Colors.blueAccent),
+                            icon: ScaleTransition(
+                              scale: _scaleAnimationCart,
+                              child: const Icon(Icons.shopping_cart, color: Colors.blueAccent),
+                            ),
                             onPressed: () {
-                              Provider.of<CartModel>(context, listen: false).addItem(book);
+                              Provider.of<CartModel>(context, listen: false).addItem(widget.book);
+                              _animationControllerCart.forward().then((_) => _animationControllerCart.reverse());
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('${book.title} added to cart!'),
+                                  content: Text('${widget.book.title} added to cart!'),
                                   duration: const Duration(seconds: 1),
                                 ),
                               );
