@@ -1,6 +1,6 @@
 // lib/models/book.dart
 
-import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 
 class Book {
   final String id;
@@ -22,7 +22,13 @@ class Book {
   });
 
   String getDisplayPrice() {
-    return 'Rp ${price.toStringAsFixed(0)}';
+   
+    final formatter = NumberFormat.currency(
+      locale: 'id_ID', 
+      symbol: 'Rp ',  
+      decimalDigits: 0, 
+    );
+    return formatter.format(price);
   }
 
   // Metode untuk mendapatkan nilai harga numerik

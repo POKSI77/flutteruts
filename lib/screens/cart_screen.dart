@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart'; // Impor paket intl
 import '../models/book.dart';
 import '../models/cart_model.dart';
 import '../models/special_book.dart';
@@ -13,6 +14,13 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Siapkan formatter harga
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Consumer<CartModel>(
@@ -115,7 +123,8 @@ class CartScreen extends StatelessWidget {
                                 fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            'Rp ${totalPrice.toStringAsFixed(0)}',
+                            // Gunakan formatter di sini
+                            currencyFormatter.format(totalPrice),
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,

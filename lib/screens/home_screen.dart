@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
       author: 'Brian Khrisna',
       price: 80000,
       imageUrl: 'https://image.gramedia.net/rs:fit:0:0/plain/https://cdn.gramedia.com/uploads/products/95ob5m98ur.jpg',
-      description: 'A story of decadence and excess...',
+      description: 'Kumpulan cerita pendek yang merenungkan tentang hidup, kematian, dan makna di balik momen-momen kecil yang tak terduga. Sebuah renungan manis pahit yang mengajak Anda menemukan keindahan dalam kesederhanaan.',
     ),
     PremiumBook(
       id: '2',
@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
       price: 15,
       bonusPrice: 5,
       imageUrl: 'https://cdn.gramedia.com/uploads/products/9397p4603v.jpg',
-      description: 'A dystopian social science fiction...',
+      description: 'Di masa depan, sebuah sistem mengatur seluruh aspek kehidupan, bahkan nasib seseorang ditentukan oleh angka. Seorang pemuda berjuang melawan takdirnya, mempertanyakan kebebasan sejati, dan berani untuk hidup di luar kehendak sistem.',
     ),
     Book(
       id: '3',
@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
       author: 'Risa Saraswati',
       price: 12,
       imageUrl: 'https://static.mizanstore.com/d/img/book/cover/covBK001247.jpg',
-      description: 'A dystopian social science fiction...',
+      description: 'Berdasarkan kisah nyata, novel horor ini mengisahkan Risa Saraswati, seorang indigo yang bisa melihat dan berinteraksi dengan hantu-hantu anak Belanda. Ikuti perjalanannya saat ia mencoba memahami dunia para arwah yang berada di balik gerbang dialognya.',
     ),
     SaleBook(
       id: '4',
@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
       price: 12,
       discountPercentage: 20,
       imageUrl: 'https://upload.wikimedia.org/wikipedia/id/1/19/Dilan_1990_%28poster%29.jpg',
-      description: 'A dystopian social science fiction...',
+      description: 'Sebuah kisah romansa masa remaja yang berlatar belakang Kota Bandung tahun 1990. Saat Milea pindah ke sekolah baru, ia bertemu Dilan, seorang panglima geng motor yang cerdas dan unik. Novel ini akan membawa Anda kembali ke manisnya cinta pertama dan kenangan masa sekolah.',
     ),
     Book(
       id: '5',
@@ -70,8 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
       author: 'J.D. Salinger',
       price: 8,
       imageUrl: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1398034300i/5107.jpg',
-      description:
-          'A novel about a teenager named Holden Caulfield and his journey through New York City.',
+      description:'Ikuti petualangan Holden Caulfield, seorang remaja yang sinis dan pemberontak, dalam perjalanannya melintasi New York City. Sebuah kisah klasik tentang pencarian jati diri, melawan kemunafikan, dan memahami arti kedewasaan.',
     ),
   ];
   
