@@ -34,7 +34,6 @@ class PremiumBook extends Book {
 }
 
 class SaleBook extends Book {
-  // Ubah dari `final double discountPercentage;` menjadi properti privat
   int _discountPercentage;
 
   SaleBook({ // Hapus `const`

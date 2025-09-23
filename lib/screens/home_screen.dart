@@ -136,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bookstore'),
+        title: const Text('PokBook'),
         actions: [
           // Tombol baru untuk layar buku spesial
           IconButton(
@@ -205,9 +205,11 @@ class _HomeScreenState extends State<HomeScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
+              // ignore: deprecated_member_use
               color: Theme.of(context).primaryColor.withOpacity(0.1),
               border: Border(
                 bottom: BorderSide(
+                  // ignore: deprecated_member_use
                   color: Theme.of(context).primaryColor.withOpacity(0.2),
                 ),
               ),
@@ -279,6 +281,7 @@ class BookCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
+                      // ignore: deprecated_member_use
                       colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                       stops: const [0.5, 1.0],
                     ),
