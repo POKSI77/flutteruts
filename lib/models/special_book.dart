@@ -62,7 +62,6 @@ class SaleBook extends Book {
     return 'Rp ${discountedPrice.toStringAsFixed(0)} (Sale)';
   }
 
-  // Tambahkan override ini
   @override
   double getDisplayPriceValue() {
     return price * (1 - _discountPercentage / 100);
