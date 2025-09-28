@@ -31,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkLoginStatus() async {
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 4));
 
     final isLoggedIn = await _authService.isLoggedIn();
     final username = await _authService.getCurrentUser();

@@ -11,6 +11,8 @@ import '../models/cart_model.dart';
 import 'special_books_screen.dart';
 import '../models/special_book.dart';
 import '../models/special_book_model.dart';
+import 'package:favorite_button/favorite_button.dart';
+
 
 
 // Home Screen
@@ -146,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return IconButton(
                 icon: Stack(
                   children: [
-                    const Icon(Icons.star, color: Colors.yellow),
+                    const Icon(Icons.favorite, color: Colors.red),
                     if (specialBookModel.items.isNotEmpty)
                       Positioned(
                         right: 0,
@@ -377,32 +379,46 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
+                      // ignore: deprecated_member_use
                       colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                       stops: const [0.5, 1.0],
                     ),
                   ),
                 ),
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Consumer<SpecialBookModel>(
-                  builder: (context, specialBookModel, child) {
-                    bool isSpecial = specialBookModel.items.contains(widget.book);
-                    return GestureDetector(
-                      onTap: () => _toggleSpecial(widget.book, specialBookModel),
-                      child: ScaleTransition(
-                        scale: _scaleAnimationStar,
-                        child: Icon(
-                          isSpecial ? Icons.star : Icons.star_border,
-                          color: isSpecial ? Colors.yellow : Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+Positioned(
+  top: 8,
+  right: 8,
+  child: Consumer<SpecialBookModel>(
+    builder: (context, specialBookModel, child) {
+      bool isSpecial = specialBookModel.items.contains(widget.book);
+      return FavoriteButton(
+        isFavorite: isSpecial, // kondisi awal
+        iconSize: 40, // biar lebih jelas, bisa disesuaikan
+        valueChanged: (_isFavorite) {
+          if (_isFavorite) {
+            specialBookModel.addItem(widget.book);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${widget.book.title} added to special books!'),
+                duration: const Duration(seconds: 1),
               ),
+            );
+          } else {
+            specialBookModel.removeItem(widget.book);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${widget.book.title} removed from special books!'),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          }
+        },
+      );
+    },
+  ),
+),
+
               Positioned(
                 bottom: 10,
                 left: 10,

@@ -12,6 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.5.3
+  favorite_button: ^0.0.4
   
   # UI & Animation
   cupertino_icons: ^1.0.2
