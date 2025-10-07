@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/book.dart';
 import '../models/cart_model.dart';
-
+import '../models/favorite_model.dart'; // ✅ Menambahkan import untuk FavoriteModel
 
 class BookDetailScreen extends StatefulWidget {
   final Book book;
@@ -16,11 +16,14 @@ class BookDetailScreen extends StatefulWidget {
 }
 
 class _BookDetailScreenState extends State<BookDetailScreen> {
-  // Tambahkan variabel state untuk melacak status favorit
-  bool _isFavorite = false;
+  // ✅ Menghapus variabel _isFavorite karena kita akan menggunakan Provider
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Mengakses FavoriteModel
+    final favoriteModel = Provider.of<FavoriteModel>(context);
+    final isFavorite = favoriteModel.isFavorite(widget.book);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.book.title),
@@ -28,24 +31,28 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
           // Tombol favorit dengan ikon yang bisa berubah
           IconButton(
             icon: Icon(
-              _isFavorite ? Icons.star : Icons.star_border,
-              color: _isFavorite ? Colors.yellow : Colors.grey,
+              isFavorite ? Icons.star : Icons.star_border, // ✅ Menggunakan status dari model
+              color: isFavorite ? Colors.yellow : Colors.grey,
             ),
             onPressed: () {
-              // Mengubah status favorit saat diklik
-              setState(() {
-                _isFavorite = !_isFavorite;
-              });
-
-              // Menampilkan notifikasi sesuai dengan aksi
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    _isFavorite ? 'Added to favorites!' : 'Removed from favorites!',
+              // ✅ Mengubah status favorit menggunakan metode dari model
+              if (isFavorite) {
+                favoriteModel.removeFavorite(widget.book);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${widget.book.title} removed from favorites!'),
+                    duration: const Duration(seconds: 1),
                   ),
-                  duration: const Duration(seconds: 1),
-                ),
-              );
+                );
+              } else {
+                favoriteModel.addFavorite(widget.book);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${widget.book.title} added to favorites!'),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              }
             },
           ),
         ],

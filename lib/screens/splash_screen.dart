@@ -1,9 +1,14 @@
+// lib/screens/splash_screen.dart
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:shimmer/shimmer.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'auth_screen.dart';
+import 'package:provider/provider.dart';
+import '../models/favorite_model.dart';
+import '../models/cart_model.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -31,38 +36,67 @@ class _SplashScreenState extends State<SplashScreen>
     _checkLoginStatus();
   }
 
-  Future<void> _checkLoginStatus() async {
+ Future<void> _checkLoginStatus() async {
     await Future.delayed(const Duration(seconds: 4));
 
     final isLoggedIn = await _authService.isLoggedIn();
-    final username = await _authService.getCurrentUser();
+    final userEmail = await _authService.getCurrentUserEmail();
 
     if (!mounted) return;
 
-    Navigator.of(context).pushReplacement(PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 900),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return isLoggedIn
-            ? HomeScreen(username: username)
-            : const AuthScreen();
-      },
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 0.2);
-        const end = Offset.zero;
-        final curve = Curves.easeOutCubic;
+    if (isLoggedIn && userEmail != null) {
+      final favoriteModel = Provider.of<FavoriteModel>(context, listen: false);
+      final cartModel = Provider.of<CartModel>(context, listen: false);
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        var fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+      await favoriteModel.setUser(userEmail); // ✅ Menambahkan await
+      cartModel.setUserKey(userEmail);
 
-        return FadeTransition(
-          opacity: animation.drive(fadeTween),
-          child: SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          ),
-        );
-      },
-    ));
+      Navigator.of(context).pushReplacement(PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 900),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return const HomeScreen();
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 0.2);
+          const end = Offset.zero;
+          final curve = Curves.easeOutCubic;
+
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+
+          return FadeTransition(
+            opacity: animation.drive(fadeTween),
+            child: SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            ),
+          );
+        },
+      ));
+    } else {
+      Navigator.of(context).pushReplacement(PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 900),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return const AuthScreen();
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 0.2);
+          const end = Offset.zero;
+          const curve = Curves.easeOutCubic;
+
+          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+
+          return FadeTransition(
+            opacity: animation.drive(fadeTween),
+            child: SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            ),
+          );
+        },
+      ));
+    }
   }
 
   @override

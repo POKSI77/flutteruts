@@ -1,4 +1,5 @@
 // lib/screens/cart_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -80,8 +81,8 @@ class CartScreen extends StatelessWidget {
                     padding: const EdgeInsets.all(15),
                     itemCount: cart.items.length,
                     itemBuilder: (context, index) {
-                      final book = cart.items[index];
-                      return CartItemCard(book: book);
+                      final item = cart.items[index];
+                      return CartItemCard(item: item);
                     },
                   ),
                 ),
@@ -116,12 +117,22 @@ class EmptyCartView extends StatelessWidget {
 }
 
 class CartItemCard extends StatelessWidget {
-  final Book book;
-  const CartItemCard({super.key, required this.book});
+  final CartItem item;
+  const CartItemCard({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartModel>(context, listen: false);
+    
+    // Perbaikan: Ubah variabel book menjadi item
+    final tempBook = Book(
+      id: item.id,
+      title: item.title,
+      author: '', // Tidak ada author di CartItem
+      price: item.price,
+      imageUrl: item.image,
+      description: '', // Tidak ada deskripsi di CartItem
+    );
 
     return Card(
       margin: const EdgeInsets.only(bottom: 15),
@@ -130,7 +141,7 @@ class CartItemCard extends StatelessWidget {
         child: Row(
           children: [
             Image.network(
-              book.imageUrl,
+              item.image,
               width: 80,
               height: 120,
               fit: BoxFit.cover,
@@ -142,22 +153,21 @@ class CartItemCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(book.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(book.author, style: TextStyle(color: Colors.grey[600])),
+                  Text(item.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  Text(book.getDisplayPrice(),
+                  Text('Rp ${item.price.toStringAsFixed(0)}', 
                       style: const TextStyle(color: Color(0xFF667eea), fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
                   Row(
                     children: [
                       IconButton(
                         icon: const Icon(Icons.remove, size: 20),
-                        onPressed: () => cart.decrementQuantity(book),
+                        onPressed: () => cart.decrementQuantity(tempBook),
                       ),
-                      Text('${book.quantity}', style: const TextStyle(fontSize: 16)),
+                      Text('${item.quantity}', style: const TextStyle(fontSize: 16)),
                       IconButton(
                         icon: const Icon(Icons.add, size: 20),
-                        onPressed: () => cart.incrementQuantity(book),
+                        onPressed: () => cart.addItem(tempBook),
                       ),
                     ],
                   ),
@@ -166,7 +176,7 @@ class CartItemCard extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () => cart.removeItem(book),
+              onPressed: () => cart.removeItem(tempBook),
             ),
           ],
         ),

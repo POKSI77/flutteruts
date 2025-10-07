@@ -1,3 +1,5 @@
+// lib/services/auth_service.dart
+
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -6,7 +8,7 @@ import 'package:uuid/uuid.dart';
 class AuthService {
   static const String _usersKey = 'users';
   static const String _currentUserKey = 'currentUser';
-  static const String _isLoggedInKey = 'isLoggedIn'; // Kunci baru
+  static const String _isLoggedInKey = 'isLoggedIn';
   final _uuid = const Uuid();
 
   // Singleton pattern
@@ -59,26 +61,25 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       final users = prefs.getStringList(_usersKey) ?? [];
 
+      String? loggedInEmail;
       final matched = users.any((user) {
         try {
           final userData = User.fromJson(jsonDecode(user));
-          return (userData.username == usernameOrEmail ||
+          if ((userData.username == usernameOrEmail ||
                   userData.email == usernameOrEmail) &&
-              userData.password == password;
+              userData.password == password) {
+            loggedInEmail = userData.email; // ✅ Simpan email yang cocok
+            return true;
+          }
+          return false;
         } catch (e) {
           return false;
         }
       });
 
-      if (matched) {
-        String usernameToStore = usernameOrEmail;
-        if (usernameToStore.contains('@')) {
-          usernameToStore = usernameToStore.split('@').first;
-        }
-        
-        // Simpan status login dan username yang sudah bersih
+      if (matched && loggedInEmail != null) {
         await prefs.setBool(_isLoggedInKey, true);
-        await prefs.setString(_currentUserKey, usernameToStore);
+        await prefs.setString(_currentUserKey, loggedInEmail!); 
       }
 
       return matched;
@@ -99,8 +100,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isLoggedInKey) ?? false;
   }
-
-  Future<String?> getCurrentUser() async {
+  
+  // ✅ Mengubah ini untuk mendapatkan email pengguna, bukan username
+  Future<String?> getCurrentUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_currentUserKey);
   }
@@ -140,15 +142,15 @@ class AuthService {
 
   Future<Map<String, dynamic>?> getUserData() async {
   final prefs = await SharedPreferences.getInstance();
-  final currentUsername = prefs.getString(_currentUserKey);
+  final currentUserEmail = prefs.getString(_currentUserKey);
   final users = prefs.getStringList(_usersKey) ?? [];
 
-  if (currentUsername == null) return null;
+  if (currentUserEmail == null) return null;
 
   for (var user in users) {
     try {
       final userData = User.fromJson(jsonDecode(user));
-      if (userData.username == currentUsername || userData.email == currentUsername) {
+      if (userData.email == currentUserEmail) {
         return {
           'username': userData.username,
           'email': userData.email,
@@ -161,7 +163,6 @@ class AuthService {
 
   return null;
 }
-
 
   /// ==================== RESET PASSWORD ====================
   Future<String> generateResetToken(String email) async {

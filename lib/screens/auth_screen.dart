@@ -1,6 +1,11 @@
+// lib/screens/auth_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../models/favorite_model.dart';
+import '../models/cart_model.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -43,7 +48,7 @@ class _AuthScreenState extends State<AuthScreen>
 
   Future<void> _loadPreviousUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final previousUser = prefs.getString('username');
+    final previousUser = prefs.getString('email');
     if (previousUser != null) {
       _emailController.text = previousUser;
     }
@@ -69,67 +74,46 @@ class _AuthScreenState extends State<AuthScreen>
       isLogin = !isLogin;
     });
 
-    // Kosongkan form setiap ganti mode
     _emailController.clear();
     _passwordController.clear();
     _confirmPasswordController.clear();
     _usernameController.clear();
   }
 
-  Future<void> _handleSubmit() async {
+ Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
       try {
-        final prefs = await SharedPreferences.getInstance();
-
         if (isLogin) {
-          // Cek apakah user terdaftar
-          final isRegistered =
-              await _authService.isUserRegistered(_emailController.text);
-          if (!isRegistered) {
-            _showError('Account not registered. Please register first.');
-            return;
-          }
-
-          // Login
           final success = await _authService.login(
             _emailController.text,
             _passwordController.text,
           );
 
           if (success) {
-            String username = _emailController.text.trim();
-            if (username.contains('@')) {
-              username = username.split('@').first;
-            }
+            final userEmail = _emailController.text.trim();
+            final favoriteModel = Provider.of<FavoriteModel>(context, listen: false);
+            final cartModel = Provider.of<CartModel>(context, listen: false);
 
-            // Simpan status login + email ke SharedPreferences
-            await prefs.setBool('isLoggedIn', true);
-            await prefs.setString('username', username);
-            await prefs.setString('email', _emailController.text.trim());
+            await favoriteModel.setUser(userEmail); // ✅ Menambahkan await
+            cartModel.setUserKey(userEmail); // Tidak perlu await karena tidak async
 
             if (!mounted) return;
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (context) => HomeScreen(username: username),
+                builder: (context) => const HomeScreen(),
               ),
             );
           } else {
             _showError('Invalid username/email or password');
           }
         } else {
-          // Register
           await _authService.register(
             _usernameController.text,
             _emailController.text,
             _passwordController.text,
           );
-
-          // Simpan username & email setelah register
-          await prefs.setString('username', _usernameController.text.trim());
-          await prefs.setString('email', _emailController.text.trim());
-
           _showSuccess('Registration successful! Please login.');
           _toggleForm();
         }
@@ -140,6 +124,7 @@ class _AuthScreenState extends State<AuthScreen>
       }
     }
   }
+
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -173,7 +158,6 @@ class _AuthScreenState extends State<AuthScreen>
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                // ignore: deprecated_member_use
                 color: Colors.white.withOpacity(0.9),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -197,11 +181,13 @@ class _AuthScreenState extends State<AuthScreen>
                         const SizedBox(height: 20),
                         Text(
                           isLogin ? 'Welcome Back!' : 'Create Account',
-                          style:
-                              Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -212,19 +198,18 @@ class _AuthScreenState extends State<AuthScreen>
                         ),
                         const SizedBox(height: 30),
 
-                        // Username
                         if (!isLogin) ...[
                           TextFormField(
                             controller: _usernameController,
                             decoration:
                                 _inputDecoration('Username', Icons.person),
-                            validator: (v) =>
-                                v == null || v.length < 3 ? 'Min 3 characters' : null,
+                            validator: (v) => v == null || v.length < 3
+                                ? 'Min 3 characters'
+                                : null,
                           ),
                           const SizedBox(height: 16),
                         ],
 
-                        // Email
                         TextFormField(
                           controller: _emailController,
                           decoration: _inputDecoration(
@@ -236,7 +221,6 @@ class _AuthScreenState extends State<AuthScreen>
                         ),
                         const SizedBox(height: 16),
 
-                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !_passwordVisible,
@@ -253,12 +237,10 @@ class _AuthScreenState extends State<AuthScreen>
                                   _passwordVisible = !_passwordVisible),
                             ),
                           ),
-                          validator: (v) => v == null || v.isEmpty
-                              ? 'Please enter password'
-                              : null,
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Enter password' : null,
                         ),
 
-                        // Forgot Password
                         if (isLogin)
                           Align(
                             alignment: Alignment.centerRight,
@@ -276,7 +258,6 @@ class _AuthScreenState extends State<AuthScreen>
                             ),
                           ),
 
-                        // Confirm Password (Register only)
                         if (!isLogin) ...[
                           const SizedBox(height: 16),
                           TextFormField(
@@ -297,15 +278,13 @@ class _AuthScreenState extends State<AuthScreen>
                                         !_confirmPasswordVisible),
                               ),
                             ),
-                            validator: (v) =>
-                                v != _passwordController.text
-                                    ? 'Passwords do not match'
-                                    : null,
+                            validator: (v) => v != _passwordController.text
+                                ? 'Passwords do not match'
+                                : null,
                           ),
                         ],
                         const SizedBox(height: 24),
 
-                        // Login/Register Button
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -334,8 +313,6 @@ class _AuthScreenState extends State<AuthScreen>
                         ),
 
                         const SizedBox(height: 16),
-
-                        // Toggle Login/Register
                         TextButton(
                           onPressed: _toggleForm,
                           child: Text(

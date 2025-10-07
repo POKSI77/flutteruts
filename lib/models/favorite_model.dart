@@ -1,64 +1,80 @@
-import 'dart:convert';
+// lib/models/favorite_model.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'book.dart';
 
 class FavoriteModel extends ChangeNotifier {
-  final List<Book> _favorites = [];
-  String _currentUserEmail = "guest"; // default guest
+  List<Book> _favorites = [];
+  String? _currentUserKey;
 
   List<Book> get favorites => List.unmodifiable(_favorites);
 
-  FavoriteModel() {
-    _loadFavorites(); // load awal
+  /// Mengatur user aktif saat ini dan memuat data
+  Future<void> setUser(String usernameOrEmail) async { // ✅ Jadikan async
+    _currentUserKey = _generateUserKey(usernameOrEmail);
+    await loadFavorites(); // ✅ Pastikan ini diawait
   }
 
-  /// Set email user aktif
-  void setUserEmail(String email) {
-    _currentUserEmail = email.isNotEmpty ? email : "guest";
-    _loadFavorites();
+  /// Membuat key unik untuk tiap user
+  String _generateUserKey(String usernameOrEmail) {
+    return 'favorites_${usernameOrEmail.replaceAll("@", "_")}';
   }
 
-  /// Tambah / hapus dari favorit
-  void toggleFavorite(Book book) {
-    final index = _favorites.indexWhere((b) => b.id == book.id);
-    if (index >= 0) {
-      _favorites.removeAt(index);
-    } else {
-      _favorites.add(book.copyWith(quantity: 1));
-    }
-    _saveFavorites();
-    notifyListeners();
-  }
-
+  /// Mengecek apakah buku termasuk favorit
   bool isFavorite(Book book) {
+    if (_currentUserKey == null) return false;
     return _favorites.any((b) => b.id == book.id);
   }
 
-  void clearFavorites() {
-    _favorites.clear();
-    _saveFavorites();
+  /// Menambah buku ke favorit
+  Future<void> addFavorite(Book book) async {
+    if (!isFavorite(book)) {
+      _favorites.add(book);
+      await saveFavorites();
+      notifyListeners();
+    }
+  }
+
+  /// Menghapus buku dari favorit
+  Future<void> removeFavorite(Book book) async {
+    _favorites.removeWhere((b) => b.id == book.id);
+    await saveFavorites();
     notifyListeners();
   }
 
-  /// 🔹 Simpan ke SharedPreferences (per akun)
-  Future<void> _saveFavorites() async {
+  /// Menyimpan daftar favorit ke SharedPreferences
+  Future<void> saveFavorites() async {
+    if (_currentUserKey == null) return;
     final prefs = await SharedPreferences.getInstance();
-    final favJson = jsonEncode(_favorites.map((b) => b.toJson()).toList());
-    await prefs.setString('favorites_${_currentUserEmail}', favJson);
+    final favoriteList =
+        _favorites.map((book) => json.encode(book.toJson())).toList();
+    await prefs.setStringList(_currentUserKey!, favoriteList);
   }
 
-  /// 🔹 Load dari SharedPreferences (per akun)
-  Future<void> _loadFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final favString = prefs.getString('favorites_${_currentUserEmail}');
-    _favorites.clear();
-
-    if (favString != null) {
-      final List<dynamic> decoded = jsonDecode(favString);
-      _favorites.addAll(decoded.map((b) => Book.fromJson(b)).toList());
+  /// Memuat daftar favorit dari SharedPreferences
+  Future<void> loadFavorites() async {
+    if (_currentUserKey == null) {
+      _favorites = [];
+      notifyListeners();
+      return;
     }
+    final prefs = await SharedPreferences.getInstance();
+    final favoriteList = prefs.getStringList(_currentUserKey!) ?? [];
+    _favorites = favoriteList
+        .map((item) => Book.fromJson(json.decode(item)))
+        .toList();
+    notifyListeners();
+  }
 
+  /// Menghapus semua favorit user aktif
+  Future<void> clearFavorites() async {
+    _favorites.clear();
+    if (_currentUserKey != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_currentUserKey!);
+    }
     notifyListeners();
   }
 }

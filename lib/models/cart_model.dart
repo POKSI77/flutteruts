@@ -1,114 +1,135 @@
-// lib/models/cart_model.dart
-
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'book.dart';
 
-class CartModel extends ChangeNotifier {
-  final List<Book> _items = [];
-  String _currentUserEmail = "guest"; // default guest
+class CartItem {
+  final String id;
+  final String title;
+  final String image;
+  final double price;
+  int quantity;
 
-  List<Book> get items => List.unmodifiable(_items);
+  CartItem({
+    required this.id,
+    required this.title,
+    required this.image,
+    required this.price,
+    this.quantity = 1,
+  });
 
-  CartModel() {
-    // default load "guest" cart
-    _loadCart();
-  }
-
-  /// Set email user aktif
-  void setUserEmail(String email) {
-    _currentUserEmail = email.isNotEmpty ? email : "guest";
-    _loadCart(); // reload cart sesuai akun
-  }
-
-  /// Tambah item ke cart
-  void addItem(Book book) {
-    try {
-      final existingBook = _items.firstWhere(
-        (item) => item.id == book.id,
-        orElse: () => Book(
-          id: '',
-          title: '',
-          author: '',
-          price: 0,
-          imageUrl: '',
-          description: '',
-        ),
+  factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
+        id: json['id'],
+        title: json['title'],
+        image: json['image'],
+        price: (json['price'] as num).toDouble(),
+        quantity: json['quantity'],
       );
 
-      if (existingBook.id.isNotEmpty) {
-        existingBook.setQuantity(existingBook.quantity + 1);
-      } else {
-        _items.add(book.copyWith(quantity: 1));
-      }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'image': image,
+        'price': price,
+        'quantity': quantity,
+      };
+}
 
-      _saveCart();
-      notifyListeners();
-    } catch (e) {
-      debugPrint("Error addItem: $e");
-    }
-  }
+class CartModel with ChangeNotifier {
+  List<CartItem> _items = [];
+  String? _currentUserKey; // ✅ Mengubah nama variabel
 
-  /// Tambah jumlah
-  void incrementQuantity(Book book) {
-    final existingBook = _items.firstWhere((item) => item.id == book.id);
-    existingBook.setQuantity(existingBook.quantity + 1);
-    _saveCart();
-    notifyListeners();
-  }
+  List<CartItem> get items => _items;
 
-  /// Kurangi jumlah
-  void decrementQuantity(Book book) {
-    final existingBook = _items.firstWhere((item) => item.id == book.id);
-    if (existingBook.quantity > 1) {
-      existingBook.setQuantity(existingBook.quantity - 1);
+  double get totalPrice =>
+      _items.fold(0, (sum, item) => sum + (item.price * item.quantity));
+
+  int get itemCount => _items.length;
+
+  /// Set email user saat login (agar data cart spesifik user)
+  void setUserKey(String? email) { // ✅ Mengubah nama metode
+    if (email != null) {
+      _currentUserKey = 'cart_${email.replaceAll("@", "_")}';
     } else {
-      _items.remove(existingBook);
+      _currentUserKey = null;
     }
-    _saveCart();
+    loadCart(); // ✅ Memuat data segera setelah kunci disetel
+  }
+
+  /// Load cart dari SharedPreferences
+  Future<void> loadCart() async {
+    if (_currentUserKey == null) {
+      _items = [];
+      notifyListeners();
+      return;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString(_currentUserKey!);
+
+    if (data != null) {
+      final decoded = json.decode(data) as List;
+      _items = decoded.map((e) => CartItem.fromJson(e)).toList();
+    } else {
+      _items = [];
+    }
     notifyListeners();
   }
 
-  /// Hapus 1 item
-  void removeItem(Book book) {
-    _items.removeWhere((item) => item.id == book.id);
-    _saveCart();
-    notifyListeners();
-  }
-
-  /// Hapus semua isi cart
-  void clearCart() {
-    _items.clear();
-    _saveCart();
-    notifyListeners();
-  }
-
-  double get totalPrice {
-    return _items.fold(
-      0,
-      (sum, item) => sum + (item.price * item.quantity),
+  /// Simpan cart ke SharedPreferences
+  Future<void> saveCart() async {
+    if (_currentUserKey == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _currentUserKey!,
+      json.encode(_items.map((e) => e.toJson()).toList()),
     );
   }
 
-  /// 🔹 Simpan cart ke SharedPreferences (per akun/email)
-  Future<void> _saveCart() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cartJson = jsonEncode(_items.map((b) => b.toJson()).toList());
-    await prefs.setString('cart_items_${_currentUserEmail}', cartJson);
+  /// Tambahkan item dari objek Book
+  Future<void> addItem(Book book) async {
+    final existingItemIndex = _items.indexWhere((item) => item.id == book.id);
+    if (existingItemIndex >= 0) {
+      _items[existingItemIndex].quantity += 1;
+    } else {
+      _items.add(CartItem(
+        id: book.id,
+        title: book.title,
+        image: book.imageUrl,
+        price: book.getDisplayPriceValue(),
+      ));
+    }
+    await saveCart();
+    notifyListeners();
   }
 
-  /// 🔹 Load cart dari SharedPreferences (per akun/email)
-  Future<void> _loadCart() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cartString = prefs.getString('cart_items_${_currentUserEmail}');
-    _items.clear();
+  /// Hapus item dari cart
+  Future<void> removeItem(Book book) async {
+    _items.removeWhere((item) => item.id == book.id);
+    await saveCart();
+    notifyListeners();
+  }
 
-    if (cartString != null) {
-      final List<dynamic> decoded = jsonDecode(cartString);
-      _items.addAll(decoded.map((b) => Book.fromJson(b)).toList());
+  /// Kurangi quantity item
+  Future<void> decrementQuantity(Book book) async {
+    final existingItemIndex = _items.indexWhere((item) => item.id == book.id);
+    if (existingItemIndex >= 0) {
+      if (_items[existingItemIndex].quantity > 1) {
+        _items[existingItemIndex].quantity--;
+      } else {
+        _items.removeAt(existingItemIndex);
+      }
+      await saveCart();
+      notifyListeners();
     }
+  }
 
+  /// Kosongkan seluruh cart
+  Future<void> clearCart() async {
+    _items.clear();
+    if (_currentUserKey != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_currentUserKey!);
+    }
     notifyListeners();
   }
 }
