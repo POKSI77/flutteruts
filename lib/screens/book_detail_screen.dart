@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/book.dart';
 import '../models/cart_model.dart';
 
+
 class BookDetailScreen extends StatefulWidget {
   final Book book;
 

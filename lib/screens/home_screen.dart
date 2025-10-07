@@ -1,5 +1,6 @@
 // lib/screens/home_screen.dart
 
+import 'package:bookstore_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/book.dart';
@@ -12,8 +13,6 @@ import 'special_books_screen.dart';
 import '../models/special_book.dart';
 import '../models/special_book_model.dart';
 import 'package:favorite_button/favorite_button.dart';
-
-
 
 // Home Screen
 class HomeScreen extends StatefulWidget {
@@ -30,15 +29,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
-  
+
   final List<Book> books = [
     Book(
       id: '1',
       title: 'Seporsi Mie Ayam Sebelum Mati',
       author: 'Brian Khrisna',
       price: 80000,
-      imageUrl: 'https://image.gramedia.net/rs:fit:0:0/plain/https://cdn.gramedia.com/uploads/products/95ob5m98ur.jpg',
-      description: 'Kumpulan cerita pendek yang merenungkan tentang hidup, kematian, dan makna di balik momen-momen kecil yang tak terduga. Sebuah renungan manis pahit yang mengajak Anda menemukan keindahan dalam kesederhanaan.',
+      imageUrl:
+          'https://image.gramedia.net/rs:fit:0:0/plain/https://cdn.gramedia.com/uploads/products/95ob5m98ur.jpg',
+      description:
+          'Kumpulan cerita pendek yang merenungkan tentang hidup, kematian, dan makna di balik momen-momen kecil yang tak terduga. Sebuah renungan manis pahit yang mengajak Anda menemukan keindahan dalam kesederhanaan.',
     ),
     PremiumBook(
       id: '2',
@@ -47,7 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
       price: 5000,
       bonusPrice: 5,
       imageUrl: 'https://cdn.gramedia.com/uploads/products/9397p4603v.jpg',
-      description: 'Di masa depan, sebuah sistem mengatur seluruh aspek kehidupan, bahkan nasib seseorang ditentukan oleh angka. Seorang pemuda berjuang melawan takdirnya, mempertanyakan kebebasan sejati, dan berani untuk hidup di luar kehendak sistem.',
+      description:
+          'Di masa depan, sebuah sistem mengatur seluruh aspek kehidupan, bahkan nasib seseorang ditentukan oleh angka. Seorang pemuda berjuang melawan takdirnya, mempertanyakan kebebasan sejati, dan berani untuk hidup di luar kehendak sistem.',
     ),
     Book(
       id: '3',
@@ -55,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
       author: 'Risa Saraswati',
       price: 78000,
       imageUrl: 'https://static.mizanstore.com/d/img/book/cover/covBK001247.jpg',
-      description: 'Berdasarkan kisah nyata, novel horor ini mengisahkan Risa Saraswati, seorang indigo yang bisa melihat dan berinteraksi dengan hantu-hantu anak Belanda. Ikuti perjalanannya saat ia mencoba memahami dunia para arwah yang berada di balik gerbang dialognya.',
+      description:
+          'Berdasarkan kisah nyata, novel horor ini mengisahkan Risa Saraswati, seorang indigo yang bisa melihat dan berinteraksi dengan hantu-hantu anak Belanda. Ikuti perjalanannya saat ia mencoba memahami dunia para arwah yang berada di balik gerbang dialognya.',
     ),
     SaleBook(
       id: '4',
@@ -63,19 +66,35 @@ class _HomeScreenState extends State<HomeScreen> {
       author: 'Pidi Baiq',
       price: 80000,
       discountPercentage: 20,
-      imageUrl: 'https://upload.wikimedia.org/wikipedia/id/1/19/Dilan_1990_%28poster%29.jpg',
-      description: 'Sebuah kisah romansa masa remaja yang berlatar belakang Kota Bandung tahun 1990. Saat Milea pindah ke sekolah baru, ia bertemu Dilan, seorang panglima geng motor yang cerdas dan unik. Novel ini akan membawa Anda kembali ke manisnya cinta pertama dan kenangan masa sekolah.',
+      imageUrl:
+          'https://upload.wikimedia.org/wikipedia/id/1/19/Dilan_1990_%28poster%29.jpg',
+      description:
+          'Sebuah kisah romansa masa remaja yang berlatar belakang Kota Bandung tahun 1990. Saat Milea pindah ke sekolah baru, ia bertemu Dilan, seorang panglima geng motor yang cerdas dan unik. Novel ini akan membawa Anda kembali ke manisnya cinta pertama dan kenangan masa sekolah.',
     ),
     Book(
       id: '5',
       title: 'The Catcher in the Rye',
       author: 'J.D. Salinger',
       price: 87000,
-      imageUrl: 'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1398034300i/5107.jpg',
-      description:'Ikuti petualangan Holden Caulfield, seorang remaja yang sinis dan pemberontak, dalam perjalanannya melintasi New York City. Sebuah kisah klasik tentang pencarian jati diri, melawan kemunafikan, dan memahami arti kedewasaan.',
+      imageUrl:
+          'https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1398034300i/5107.jpg',
+      description:
+          'Ikuti petualangan Holden Caulfield, seorang remaja yang sinis dan pemberontak, dalam perjalanannya melintasi New York City. Sebuah kisah klasik tentang pencarian jati diri, melawan kemunafikan, dan memahami arti kedewasaan.',
     ),
   ];
-  
+
+  // 👉 Tambahan untuk Search
+  String _searchQuery = '';
+
+  List<Book> get _filteredBooks {
+    if (_searchQuery.trim().isEmpty) return books;
+    final q = _searchQuery.toLowerCase();
+    return books.where((b) {
+      return b.title.toLowerCase().contains(q) ||
+          b.author.toLowerCase().contains(q);
+    }).toList();
+  }
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour >= 0 && hour < 12) {
@@ -105,44 +124,28 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _handleLogout() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
-              'Logout',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm ?? false) {
-      await _authService.logout();
-
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bookstore'),
         actions: [
+
+          // Tombol Toggle Dark/Light Mode 🌙☀️
+          IconButton(
+            icon: Icon(
+              themeNotifier.isDark ? Icons.light_mode : Icons.dark_mode,
+            ),
+            tooltip: themeNotifier.isDark
+                ? 'Switch to Light Mode'
+                : 'Switch to Dark Mode',
+            onPressed: () {
+              themeNotifier.toggle();
+            },
+          ),
+
+          // ❤️ favorites / special (paling kiri)
           Consumer<SpecialBookModel>(
             builder: (context, specialBookModel, child) {
               return IconButton(
@@ -186,6 +189,8 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+
+          // 🛒 cart (tengah)
           Consumer<CartModel>(
             builder: (context, cart, child) {
               return IconButton(
@@ -229,33 +234,69 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+
+          // 👤 profile (paling kanan)
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _handleLogout,
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/profile');
+            },
           ),
         ],
       ),
       body: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
-                ),
+          // Welcome Message
+AnimatedContainer(
+  duration: const Duration(milliseconds: 400),
+  curve: Curves.easeInOut,
+  width: double.infinity,
+  padding: const EdgeInsets.all(16.0),
+  decoration: BoxDecoration(
+    color: themeNotifier.isDark
+        // ignore: deprecated_member_use
+        ? Colors.blueGrey.withOpacity(0.25)
+        // ignore: deprecated_member_use
+        : Theme.of(context).primaryColor.withOpacity(0.1),
+    border: Border(
+      bottom: BorderSide(
+        color: themeNotifier.isDark
+            // ignore: deprecated_member_use
+            ? Colors.white.withOpacity(0.2)
+            // ignore: deprecated_member_use
+            : Theme.of(context).primaryColor.withOpacity(0.2),
+      ),
+    ),
+  ),
+  child: AnimatedDefaultTextStyle(
+    duration: const Duration(milliseconds: 400),
+    curve: Curves.easeInOut,
+    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+          color: themeNotifier.isDark ? const Color.fromARGB(255, 255, 255, 255) : const Color.fromARGB(255, 96, 125, 139),
+          fontWeight: FontWeight.bold,
+        ),
+    child: Text(
+      _welcomeMessage ?? 'Loading...',
+    ),
+  ),
+),
+
+
+          // 🔍 Search Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: TextField(
+              onChanged: (v) => setState(() => _searchQuery = v),
+              decoration: InputDecoration(
+                hintText: 'Cari judul atau penulis...',
+                prefixIcon: const Icon(Icons.search),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            child: Text(
-              _welcomeMessage ?? 'Loading...',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).primaryColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
           ),
+
+          // 📚 Grid View (pakai _filteredBooks)
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.all(8),
@@ -265,9 +306,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 0.6,
               ),
-              itemCount: books.length,
+              itemCount: _filteredBooks.length,
               itemBuilder: (context, index) {
-                return BookCard(book: books[index]);
+                return BookCard(book: _filteredBooks[index]);
               },
             ),
           ),
@@ -277,6 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// Full BookCard with favorite + cart + animations
 class BookCard extends StatefulWidget {
   final Book book;
 
@@ -342,7 +384,9 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
           duration: const Duration(seconds: 1),
         ),
       );
-      _animationControllerStar.forward().then((_) => _animationControllerStar.reverse());
+      _animationControllerStar
+          .forward()
+          .then((_) => _animationControllerStar.reverse());
     }
   }
 
@@ -379,46 +423,57 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      // ignore: deprecated_member_use
-                      colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.7)
+                      ],
                       stops: const [0.5, 1.0],
                     ),
                   ),
                 ),
               ),
-Positioned(
-  top: 8,
-  right: 8,
-  child: Consumer<SpecialBookModel>(
-    builder: (context, specialBookModel, child) {
-      bool isSpecial = specialBookModel.items.contains(widget.book);
-      return FavoriteButton(
-        isFavorite: isSpecial, // kondisi awal
-        iconSize: 40, // biar lebih jelas, bisa disesuaikan
-        valueChanged: (_isFavorite) {
-          if (_isFavorite) {
-            specialBookModel.addItem(widget.book);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('${widget.book.title} added to special books!'),
-                duration: const Duration(seconds: 1),
-              ),
-            );
-          } else {
-            specialBookModel.removeItem(widget.book);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('${widget.book.title} removed from special books!'),
-                duration: const Duration(seconds: 1),
-              ),
-            );
-          }
-        },
-      );
-    },
-  ),
-),
 
+              // ❤️ Favorite Button
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Consumer<SpecialBookModel>(
+                  builder: (context, specialBookModel, child) {
+                    bool isSpecial =
+                        specialBookModel.items.contains(widget.book);
+                    return FavoriteButton(
+                      isFavorite: isSpecial,
+                      iconSize: 36,
+                      valueChanged: (_isFavorite) {
+                        if (_isFavorite) {
+                          specialBookModel.addItem(widget.book);
+                          _animationControllerStar
+                              .forward()
+                              .then((_) => _animationControllerStar.reverse());
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  '${widget.book.title} added to special books!'),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        } else {
+                          specialBookModel.removeItem(widget.book);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  '${widget.book.title} removed from special books!'),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              // 📖 Title + Author + Price + Cart
               Positioned(
                 bottom: 10,
                 left: 10,
@@ -463,14 +518,20 @@ Positioned(
                           child: IconButton(
                             icon: ScaleTransition(
                               scale: _scaleAnimationCart,
-                              child: const Icon(Icons.shopping_cart, color: Colors.blueAccent),
+                              child: const Icon(Icons.shopping_cart,
+                                  color: Colors.blueAccent),
                             ),
                             onPressed: () {
-                              Provider.of<CartModel>(context, listen: false).addItem(widget.book);
-                              _animationControllerCart.forward().then((_) => _animationControllerCart.reverse());
+                              Provider.of<CartModel>(context, listen: false)
+                                  .addItem(widget.book);
+                              _animationControllerCart
+                                  .forward()
+                                  .then((_) =>
+                                      _animationControllerCart.reverse());
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('${widget.book.title} added to cart!'),
+                                  content: Text(
+                                      '${widget.book.title} added to cart!'),
                                   duration: const Duration(seconds: 1),
                                 ),
                               );

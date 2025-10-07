@@ -138,6 +138,31 @@ class AuthService {
     });
   }
 
+  Future<Map<String, dynamic>?> getUserData() async {
+  final prefs = await SharedPreferences.getInstance();
+  final currentUsername = prefs.getString(_currentUserKey);
+  final users = prefs.getStringList(_usersKey) ?? [];
+
+  if (currentUsername == null) return null;
+
+  for (var user in users) {
+    try {
+      final userData = User.fromJson(jsonDecode(user));
+      if (userData.username == currentUsername || userData.email == currentUsername) {
+        return {
+          'username': userData.username,
+          'email': userData.email,
+        };
+      }
+    } catch (e) {
+      // skip jika data rusak
+    }
+  }
+
+  return null;
+}
+
+
   /// ==================== RESET PASSWORD ====================
   Future<String> generateResetToken(String email) async {
     try {
