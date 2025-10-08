@@ -13,7 +13,8 @@ import '../models/special_book.dart';
 import '../models/favorite_model.dart';
 import '../widgets/book_card.dart';
 import 'package:favorite_button/favorite_button.dart';
-import 'favorite_screen.dart'; // ✅ Perbaikan: Import FavoriteScreen
+import 'favorite_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart'; // ✅ Import library
 
 // Home Screen
 class HomeScreen extends StatefulWidget {
@@ -43,8 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
       id: '2',
       title: '3726',
       author: 'A. Fuadi',
-      price: 50000,
-      bonusPrice: 5000,
+      price: 5000,
+      bonusPrice: 5,
       imageUrl: 'https://cdn.gramedia.com/uploads/products/9397p4603v.jpg',
       description:
           'Di masa depan, sebuah sistem mengatur seluruh aspek kehidupan, bahkan nasib seseorang ditentukan oleh angka. Seorang pemuda berjuang melawan takdirnya, mempertanyakan kebebasan sejati, dan berani untuk hidup di luar kehendak sistem.',
@@ -140,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
               themeNotifier.toggle();
             },
           ),
-          Consumer<FavoriteModel>( // ✅ Perbaikan: Menggunakan FavoriteModel untuk hitungan favorit
+          Consumer<FavoriteModel>(
             builder: (context, favoriteModel, child) {
               return IconButton(
                 icon: Stack(
@@ -176,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const FavoriteScreen(), // ✅ Mengarahkan ke FavoriteScreen
+                      builder: (context) => const FavoriteScreen(),
                     ),
                   );
                 },
@@ -236,6 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
+          // ✅ Perubahan: Tambahkan .animate() dan .slide()
           AnimatedContainer(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeInOut,
@@ -266,6 +268,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 _welcomeMessage ?? 'Loading...',
               ),
             ),
+          ).animate().slide(
+            begin: const Offset(-1, 0),
+            end: Offset.zero,
+            duration: 500.ms,
+            curve: Curves.easeOut,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -295,6 +302,177 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Full BookCard with favorite + cart + animations
+class BookCard extends StatefulWidget {
+  final Book book;
+
+  const BookCard({Key? key, required this.book}) : super(key: key);
+
+  @override
+  State<BookCard> createState() => _BookCardState();
+}
+
+class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
+  late AnimationController _animationControllerStar;
+  late Animation<double> _scaleAnimationStar;
+  late AnimationController _animationControllerCart;
+  late Animation<double> _scaleAnimationCart;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationControllerStar = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnimationStar = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _animationControllerStar,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    _animationControllerCart = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _scaleAnimationCart = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _animationControllerCart,
+        curve: Curves.easeOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationControllerStar.dispose();
+    _animationControllerCart.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final favoriteModel = Provider.of<FavoriteModel>(context);
+    final cartModel = Provider.of<CartModel>(context, listen: false);
+    final isFavorite = favoriteModel.isFavorite(widget.book);
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: InkWell(
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => BookDetailScreen(book: widget.book))),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Stack(
+            children: [
+              Image.network(widget.book.imageUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (c, e, s) =>
+                      const Center(child: Icon(Icons.book, size: 50))),
+              Positioned.fill(
+                child: DecoratedBox(
+                    decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.7)
+                      ],
+                      stops: const [0.5, 1.0]),
+                )),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: FavoriteButton(
+                  isFavorite: isFavorite,
+                  iconSize: 30,
+                  valueChanged: (fav) {
+                    if (fav) {
+                      favoriteModel.addFavorite(widget.book);
+                      _animationControllerStar
+                          .forward()
+                          .then((_) => _animationControllerStar.reverse());
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              '${widget.book.title} added to special books!')));
+                    } else {
+                      favoriteModel.removeFavorite(widget.book);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              '${widget.book.title} removed from special books!')));
+                    }
+                  },
+                ),
+              ),
+              Positioned(
+                bottom: 10,
+                left: 10,
+                right: 10,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(widget.book.title,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: 4),
+                    Text(widget.book.author,
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(widget.book.getDisplayPrice(),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold)),
+                        Container(
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20)),
+                          child: IconButton(
+                            icon: ScaleTransition(
+                                scale: _scaleAnimationCart,
+                                child: const Icon(Icons.shopping_cart,
+                                    color: Colors.blueAccent)),
+                            onPressed: () {
+                              cartModel.addItem(widget.book);
+                              _animationControllerCart
+                                  .forward()
+                                  .then((_) =>
+                                      _animationControllerCart.reverse());
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          '${widget.book.title} added to cart!')));
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

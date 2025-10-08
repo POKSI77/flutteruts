@@ -101,10 +101,10 @@ class EmptyCartView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
+        children: [
           Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey),
           SizedBox(height: 20),
           Text("Your cart is empty", style: TextStyle(fontSize: 20, color: Colors.grey)),
