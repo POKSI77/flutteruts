@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:favorite_button/favorite_button.dart';
+import 'package:provider/provider.dart';
 import '../models/book.dart';
 import '../models/cart_model.dart';
 import '../models/favorite_model.dart';
@@ -33,7 +33,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
 
     _lottieController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000), // Tambahkan durasi
+      duration: const Duration(milliseconds: 1000), // Durasi disetel
     );
     _lottieController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -91,7 +91,6 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        // ignore: deprecated_member_use
                         Colors.black.withOpacity(0.7)
                       ],
                       stops: const [
@@ -164,7 +163,6 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                                 onPressed: _onAddToCart,
                               ),
                             ),
-                            // Menggunakan AnimatedBuilder untuk beralih antara Lottie dan widget kosong
                             AnimatedBuilder(
                               animation: _lottieController,
                               builder: (context, child) {
@@ -181,7 +179,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                                         repeat: false,
                                       )
                                     : const SizedBox
-                                        .shrink(); // Widget kosong saat tidak beranimasi
+                                        .shrink();
                               },
                             ),
                           ],

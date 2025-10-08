@@ -1,5 +1,4 @@
 // lib/screens/home_screen.dart
-
 import 'package:bookstore_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,10 +10,10 @@ import '../models/cart_model.dart';
 import 'special_books_screen.dart';
 import '../models/special_book.dart';
 import '../models/favorite_model.dart';
-import '../widgets/book_card.dart';
 import 'package:favorite_button/favorite_button.dart';
 import 'favorite_screen.dart';
-import 'package:flutter_animate/flutter_animate.dart'; // ✅ Import library
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:lottie/lottie.dart'; // ✅ Pastikan Lottie diimpor
 
 // Home Screen
 class HomeScreen extends StatefulWidget {
@@ -44,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
       id: '2',
       title: '3726',
       author: 'A. Fuadi',
-      price: 5000,
+      price: 50000,
       bonusPrice: 5,
       imageUrl: 'https://cdn.gramedia.com/uploads/products/9397p4603v.jpg',
       description:
@@ -237,26 +236,29 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // ✅ Perubahan: Tambahkan .animate() dan .slide()
           AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
+            duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut,
             width: double.infinity,
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
               color: themeNotifier.isDark
+                  // ignore: deprecated_member_use
                   ? Colors.blueGrey.withOpacity(0.25)
+                  // ignore: deprecated_member_use
                   : Theme.of(context).primaryColor.withOpacity(0.1),
               border: Border(
                 bottom: BorderSide(
                   color: themeNotifier.isDark
+                      // ignore: deprecated_member_use
                       ? Colors.white.withOpacity(0.2)
+                      // ignore: deprecated_member_use
                       : Theme.of(context).primaryColor.withOpacity(0.2),
                 ),
               ),
             ),
             child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 400),
+              duration: const Duration(milliseconds: 500),
               curve: Curves.easeInOut,
               style: Theme.of(context).textTheme.titleLarge!.copyWith(
                     color: themeNotifier.isDark
@@ -320,8 +322,8 @@ class BookCard extends StatefulWidget {
 class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
   late AnimationController _animationControllerStar;
   late Animation<double> _scaleAnimationStar;
-  late AnimationController _animationControllerCart;
-  late Animation<double> _scaleAnimationCart;
+  late AnimationController _lottieController;
+  bool _isLottieVisible = false;
 
   @override
   void initState() {
@@ -336,30 +338,44 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
         curve: Curves.easeOut,
       ),
     );
-
-    _animationControllerCart = AnimationController(
+    
+    _lottieController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 1000), // Duration adjusted
     );
-    _scaleAnimationCart = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(
-        parent: _animationControllerCart,
-        curve: Curves.easeOut,
-      ),
-    );
+    _lottieController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _isLottieVisible = false; // Hide Lottie after it's done
+        });
+        _lottieController.reset();
+      }
+    });
   }
 
   @override
   void dispose() {
     _animationControllerStar.dispose();
-    _animationControllerCart.dispose();
+    _lottieController.dispose();
     super.dispose();
+  }
+
+  void _onAddToCart() {
+    Provider.of<CartModel>(context, listen: false).addItem(widget.book);
+    
+    // Show Lottie and start animation
+    setState(() {
+      _isLottieVisible = true;
+    });
+    _lottieController.forward(from: 0.0);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.book.title} added to cart!')));
   }
 
   @override
   Widget build(BuildContext context) {
     final favoriteModel = Provider.of<FavoriteModel>(context);
-    final cartModel = Provider.of<CartModel>(context, listen: false);
     final isFavorite = favoriteModel.isFavorite(widget.book);
 
     return Card(
@@ -443,27 +459,35 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold)),
-                        Container(
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20)),
-                          child: IconButton(
-                            icon: ScaleTransition(
-                                scale: _scaleAnimationCart,
-                                child: const Icon(Icons.shopping_cart,
-                                    color: Colors.blueAccent)),
-                            onPressed: () {
-                              cartModel.addItem(widget.book);
-                              _animationControllerCart
-                                  .forward()
-                                  .then((_) =>
-                                      _animationControllerCart.reverse());
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          '${widget.book.title} added to cart!')));
-                            },
-                          ),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.shopping_cart,
+                                    color: Colors.blueAccent),
+                                onPressed: _onAddToCart,
+                              ),
+                            ),
+                            AnimatedBuilder(
+                              animation: _lottieController,
+                              builder: (context, child) {
+                                return _isLottieVisible
+                                    ? Lottie.asset(
+                                        'assets/animations/cart_animation.json',
+                                        width: 50,
+                                        height: 50,
+                                        controller: _lottieController,
+                                        repeat: false,
+                                      )
+                                    : const SizedBox.shrink();
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
