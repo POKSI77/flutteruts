@@ -1,19 +1,20 @@
 // lib/screens/home_screen.dart
+
 import 'package:bookstore_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../models/book.dart';
 import 'cart_screen.dart';
 import 'book_detail_screen.dart';
 import '../services/auth_service.dart';
 import '../models/cart_model.dart';
-import 'special_books_screen.dart';
 import '../models/special_book.dart';
 import '../models/favorite_model.dart';
 import 'package:favorite_button/favorite_button.dart';
 import 'favorite_screen.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lottie/lottie.dart'; // ✅ Pastikan Lottie diimpor
+import 'package:lottie/lottie.dart';
 
 // Home Screen
 class HomeScreen extends StatefulWidget {
@@ -125,15 +126,48 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final isDarkMode = themeNotifier.isDark;
+
+    // Gradien untuk AppBar, warnanya akan berubah tergantung tema
+    final List<Color> appBarGradientColors = [
+      isDarkMode ? Colors.black : Colors.white,
+      isDarkMode ? Colors.grey.shade900 : const Color(0xFFBBDEFB),
+    ];
+    
+    // Warna ikon dan teks di AppBar: menyesuaikan tema
+    final Color appBarIconColor = isDarkMode ? Colors.white : Colors.black;
+    final Color appBarTextColor = isDarkMode ? Colors.white : Colors.black;
+
+    // Warna latar belakang body: putih untuk terang, abu-abu gelap untuk gelap
+    final Color bodyBackgroundColor = isDarkMode ? Colors.black87 : Colors.white;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bookstore'),
+        title: Text(
+          'Bookstore',
+          style: TextStyle(
+            color: appBarTextColor, 
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: appBarGradientColors, // ✅ Gradien yang dinamis
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        elevation: 4,
         actions: [
           IconButton(
             icon: Icon(
-              themeNotifier.isDark ? Icons.light_mode : Icons.dark_mode,
+              isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              color: appBarIconColor, 
             ),
-            tooltip: themeNotifier.isDark
+            tooltip: isDarkMode
                 ? 'Switch to Light Mode'
                 : 'Switch to Dark Mode',
             onPressed: () {
@@ -145,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return IconButton(
                 icon: Stack(
                   children: [
-                    const Icon(Icons.favorite, color: Colors.red),
+                    Icon(Icons.favorite, color: isDarkMode ? Colors.red.shade200 : Colors.red),
                     if (favoriteModel.favorites.isNotEmpty)
                       Positioned(
                         right: 0,
@@ -188,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return IconButton(
                 icon: Stack(
                   children: [
-                    const Icon(Icons.shopping_cart),
+                    Icon(Icons.shopping_cart, color: appBarIconColor),
                     if (cart.items.isNotEmpty)
                       Positioned(
                         right: 0,
@@ -227,83 +261,71 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.person),
+            icon: Icon(Icons.person, color: appBarIconColor),
             onPressed: () {
               Navigator.of(context).pushNamed('/profile');
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            width: double.infinity,
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: themeNotifier.isDark
-                  // ignore: deprecated_member_use
-                  ? Colors.blueGrey.withOpacity(0.25)
-                  // ignore: deprecated_member_use
-                  : Theme.of(context).primaryColor.withOpacity(0.1),
-              border: Border(
-                bottom: BorderSide(
-                  color: themeNotifier.isDark
-                      // ignore: deprecated_member_use
-                      ? Colors.white.withOpacity(0.2)
-                      // ignore: deprecated_member_use
-                      : Theme.of(context).primaryColor.withOpacity(0.2),
-                ),
-              ),
-            ),
-            child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: themeNotifier.isDark
-                        ? const Color.fromARGB(255, 255, 255, 255)
-                        : const Color.fromARGB(255, 96, 125, 139),
-                    fontWeight: FontWeight.bold,
-                  ),
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        color: bodyBackgroundColor, // ✅ Mengubah warna background body
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
               child: Text(
                 _welcomeMessage ?? 'Loading...',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge!
+                    .copyWith(
+                      color: isDarkMode ? Colors.white : Colors.black, // ✅ Sesuaikan warna teks
+                      fontWeight: FontWeight.bold,
+                    ),
+              ).animate().slide(
+                  begin: const Offset(-1, 0),
+                  end: Offset.zero,
+                  duration: 500.ms,
+                  curve: Curves.easeOut,
+                ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: TextField(
+                onChanged: (v) => setState(() => _searchQuery = v),
+                decoration: InputDecoration(
+                  hintText: 'Cari judul atau penulis...',
+                  prefixIcon: Icon(Icons.search, color: isDarkMode ? Colors.white70 : Colors.black54), // ✅ Warna ikon pencarian
+                  hintStyle: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black54), // ✅ Warna hint
+                  filled: true,
+                  fillColor: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.1), // ✅ Latar belakang search bar
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: TextStyle(color: isDarkMode ? Colors.white : Colors.black), // ✅ Warna teks input
               ),
             ),
-          ).animate().slide(
-            begin: const Offset(-1, 0),
-            end: Offset.zero,
-            duration: 500.ms,
-            curve: Curves.easeOut,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: TextField(
-              onChanged: (v) => setState(() => _searchQuery = v),
-              decoration: InputDecoration(
-                hintText: 'Cari judul atau penulis...',
-                prefixIcon: const Icon(Icons.search),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(8),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.6,
+                ),
+                itemCount: _filteredBooks.length,
+                itemBuilder: (context, index) {
+                  return BookCard(book: _filteredBooks[index]);
+                },
               ),
             ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(8),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 0.6,
-              ),
-              itemCount: _filteredBooks.length,
-              itemBuilder: (context, index) {
-                return BookCard(book: _filteredBooks[index]);
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -377,6 +399,9 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final favoriteModel = Provider.of<FavoriteModel>(context);
     final isFavorite = favoriteModel.isFavorite(widget.book);
+    
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final isDarkMode = themeNotifier.isDark;
 
     return Card(
       elevation: 4,
@@ -464,12 +489,12 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: isDarkMode ? Colors.grey.shade800 : Colors.white,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: IconButton(
-                                icon: const Icon(Icons.shopping_cart,
-                                    color: Colors.blueAccent),
+                                icon: Icon(Icons.shopping_cart,
+                                    color: isDarkMode ? Colors.white : Colors.blueAccent),
                                 onPressed: _onAddToCart,
                               ),
                             ),

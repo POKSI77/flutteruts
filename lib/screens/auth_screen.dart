@@ -80,7 +80,7 @@ class _AuthScreenState extends State<AuthScreen>
     _usernameController.clear();
   }
 
- Future<void> _handleSubmit() async {
+  Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
@@ -96,8 +96,8 @@ class _AuthScreenState extends State<AuthScreen>
             final favoriteModel = Provider.of<FavoriteModel>(context, listen: false);
             final cartModel = Provider.of<CartModel>(context, listen: false);
 
-            await favoriteModel.setUser(userEmail); // ✅ Menambahkan await
-            cartModel.setUserKey(userEmail); // Tidak perlu await karena tidak async
+            await favoriteModel.setUser(userEmail);
+            cartModel.setUserKey(userEmail);
 
             if (!mounted) return;
             Navigator.of(context).pushReplacement(
@@ -124,7 +124,6 @@ class _AuthScreenState extends State<AuthScreen>
       }
     }
   }
-
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -153,12 +152,37 @@ class _AuthScreenState extends State<AuthScreen>
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
-              child: Card(
-                elevation: 8,
-                shape: RoundedRectangleBorder(
+              child: Container(
+                decoration: BoxDecoration(
+                  // ignore: deprecated_member_use
+                  color: Colors.white.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    // Bayangan utama untuk elevasi
+                    BoxShadow(
+                      // ignore: deprecated_member_use
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                    // Efek glow di bagian bawah (biru)
+                    BoxShadow(
+                      // ignore: deprecated_member_use
+                      color: const Color(0xFF2575FC).withOpacity(0.4),
+                      blurRadius: 60, // ✅ Nilai blur ditingkatkan
+                      spreadRadius: 5, // ✅ Nilai spread ditingkatkan
+                      offset: const Offset(0, 20), // ✅ Offset ditingkatkan
+                    ),
+                    // Efek glow di bagian atas (ungu)
+                    BoxShadow(
+                      // ignore: deprecated_member_use
+                      color: const Color(0xFF6A11CB).withOpacity(0.3),
+                      blurRadius: 60, // ✅ Nilai blur ditingkatkan
+                      spreadRadius: 5, // ✅ Nilai spread ditingkatkan
+                      offset: const Offset(0, -20), // ✅ Offset ditingkatkan
+                    ),
+                  ],
                 ),
-                color: Colors.white.withOpacity(0.9),
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Form(
@@ -166,7 +190,7 @@ class _AuthScreenState extends State<AuthScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Hero(
+                        const Hero(
                           tag: 'logo',
                           child: SizedBox(
                             height: 90,
@@ -180,7 +204,7 @@ class _AuthScreenState extends State<AuthScreen>
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          isLogin ? 'Welcome Back!' : 'Create Account',
+                          isLogin ? 'Welcome !' : 'Create Account',
                           style: Theme.of(context)
                               .textTheme
                               .headlineSmall
@@ -198,6 +222,7 @@ class _AuthScreenState extends State<AuthScreen>
                         ),
                         const SizedBox(height: 30),
 
+                        // Form Fields
                         if (!isLogin) ...[
                           TextFormField(
                             controller: _usernameController,
@@ -254,7 +279,10 @@ class _AuthScreenState extends State<AuthScreen>
                                   ),
                                 );
                               },
-                              child: const Text("Forgot Password?"),
+                              child: Text(
+                                "Forgot Password?",
+                                style: TextStyle(color: Colors.blue[700]),
+                              ),
                             ),
                           ),
 
@@ -288,37 +316,62 @@ class _AuthScreenState extends State<AuthScreen>
                         SizedBox(
                           width: double.infinity,
                           height: 50,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2575FC),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF2575FC), Color(0xFF6A11CB)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
                               ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  // ignore: deprecated_member_use
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
                             ),
-                            onPressed: _isLoading ? null : _handleSubmit,
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: _isLoading ? null : _handleSubmit,
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      isLogin ? 'Login' : 'Register',
+                                      style: const TextStyle(
+                                          fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
                                     ),
-                                  )
-                                : Text(
-                                    isLogin ? 'Login' : 'Register',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
+                            ),
                           ),
                         ),
-
+                        
                         const SizedBox(height: 16),
+                        
                         TextButton(
                           onPressed: _toggleForm,
                           child: Text(
                             isLogin
                                 ? "Don't have an account? Register"
                                 : "Already have an account? Login",
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -338,9 +391,18 @@ class _AuthScreenState extends State<AuthScreen>
       labelText: label,
       prefixIcon: Icon(icon, color: Colors.grey[700]),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: Colors.grey[50],
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF2575FC), width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[300]!),
       ),
     );
   }

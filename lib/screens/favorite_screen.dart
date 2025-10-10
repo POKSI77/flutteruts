@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/book.dart';
 import '../models/favorite_model.dart';
 import 'book_detail_screen.dart';
 
