@@ -1,11 +1,15 @@
 // lib/services/auth_service.dart
 
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import 'package:uuid/uuid.dart';
 
 class AuthService {
+  final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _usersKey = 'users';
   static const String _currentUserKey = 'currentUser';
   static const String _isLoggedInKey = 'isLoggedIn';
@@ -19,37 +23,40 @@ class AuthService {
   /// ==================== REGISTER ====================
   Future<void> register(String username, String email, String password) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final users = prefs.getStringList(_usersKey) ?? [];
-
-      // Validate username
-      if (username.isEmpty || username.length < 3) {
-        throw Exception('Username must be at least 3 characters');
-      }
-
-      // Validate email format
-      if (!_isValidEmail(email)) {
-        throw Exception('Invalid email format');
-      }
-
-      // Validate password strength
-      if (!_isValidPassword(password)) {
-        throw Exception('Password must be at least 6 characters');
-      }
-
-      // Check if user already exists
-      if (await _isUserExists(username, email)) {
-        throw Exception('Username or email already registered');
-      }
-
-      // Add new user
-      final newUser = User(
-        username: username,
+      // Create user in Firebase Auth
+      final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      users.add(jsonEncode(newUser.toJson()));
-      await prefs.setStringList(_usersKey, users);
+
+      // Store additional user data in Firestore
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'username': username,
+        'email': email,
+        'createdAt': DateTime.now(),
+      });
+
+      // Save login state
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('username', username);
+      await prefs.setString('email', email);
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'Email already registered';
+          break;
+        case 'weak-password':
+          message = 'Password is too weak';
+          break;
+        case 'invalid-email':
+          message = 'Invalid email address';
+          break;
+        default:
+          message = 'Registration failed: ${e.message}';
+      }
+      throw Exception(message);
     } catch (e) {
       throw Exception('Registration failed: ${e.toString()}');
     }
@@ -58,31 +65,46 @@ class AuthService {
   /// ==================== LOGIN ====================
   Future<bool> login(String usernameOrEmail, String password) async {
     try {
+      // Sign in with Firebase Auth
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: usernameOrEmail,
+        password: password,
+      );
+
+      // Get user data from Firestore
+      final userData = await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      final username = userData.data()?['username'] as String? ?? 'User';
+
+      // Save login state
       final prefs = await SharedPreferences.getInstance();
-      final users = prefs.getStringList(_usersKey) ?? [];
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('username', username);
+      await prefs.setString('email', usernameOrEmail);
 
-      String? loggedInEmail;
-      final matched = users.any((user) {
-        try {
-          final userData = User.fromJson(jsonDecode(user));
-          if ((userData.username == usernameOrEmail ||
-                  userData.email == usernameOrEmail) &&
-              userData.password == password) {
-            loggedInEmail = userData.email; // ✅ Simpan email yang cocok
-            return true;
-          }
-          return false;
-        } catch (e) {
-          return false;
-        }
-      });
-
-      if (matched && loggedInEmail != null) {
-        await prefs.setBool(_isLoggedInKey, true);
-        await prefs.setString(_currentUserKey, loggedInEmail!); 
+      return true;
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'No user found with this email';
+          break;
+        case 'wrong-password':
+          message = 'Wrong password';
+          break;
+        case 'invalid-email':
+          message = 'Invalid email address';
+          break;
+        case 'user-disabled':
+          message = 'This account has been disabled';
+          break;
+        default:
+          message = 'Login failed: ${e.message}';
       }
-
-      return matched;
+      throw Exception(message);
     } catch (e) {
       throw Exception('Login failed: ${e.toString()}');
     }
@@ -90,9 +112,9 @@ class AuthService {
 
   /// ==================== LOGOUT ====================
   Future<void> logout() async {
+    await _auth.signOut();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_isLoggedInKey);
-    await prefs.remove(_currentUserKey);
+    await prefs.clear();
   }
 
   /// ==================== CHECK SESSION ====================
@@ -100,7 +122,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isLoggedInKey) ?? false;
   }
-  
+
   // ✅ Mengubah ini untuk mendapatkan email pengguna, bukan username
   Future<String?> getCurrentUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
@@ -141,28 +163,28 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>?> getUserData() async {
-  final prefs = await SharedPreferences.getInstance();
-  final currentUserEmail = prefs.getString(_currentUserKey);
-  final users = prefs.getStringList(_usersKey) ?? [];
+    final prefs = await SharedPreferences.getInstance();
+    final currentUserEmail = prefs.getString(_currentUserKey);
+    final users = prefs.getStringList(_usersKey) ?? [];
 
-  if (currentUserEmail == null) return null;
+    if (currentUserEmail == null) return null;
 
-  for (var user in users) {
-    try {
-      final userData = User.fromJson(jsonDecode(user));
-      if (userData.email == currentUserEmail) {
-        return {
-          'username': userData.username,
-          'email': userData.email,
-        };
+    for (var user in users) {
+      try {
+        final userData = User.fromJson(jsonDecode(user));
+        if (userData.email == currentUserEmail) {
+          return {
+            'username': userData.username,
+            'email': userData.email,
+          };
+        }
+      } catch (e) {
+        // skip jika data rusak
       }
-    } catch (e) {
-      // skip jika data rusak
     }
-  }
 
-  return null;
-}
+    return null;
+  }
 
   /// ==================== RESET PASSWORD ====================
   Future<String> generateResetToken(String email) async {
