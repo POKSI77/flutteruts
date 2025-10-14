@@ -1,6 +1,7 @@
 // lib/screens/home_screen.dart
 
 import 'package:bookstore_app/main.dart';
+import 'package:bookstore_app/screens/profile.screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -50,7 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
       author: 'A. Fuadi',
       price: 50000,
       bonusPrice: 5,
-      imageUrl: 'https://images.weserv.nl/?url=cdn.gramedia.com/uploads/products/9397p4603v.jpg',
+      imageUrl:
+          'https://images.weserv.nl/?url=cdn.gramedia.com/uploads/products/9397p4603v.jpg',
       description:
           'Di masa depan, sebuah sistem mengatur seluruh aspek kehidupan, bahkan nasib seseorang ditentukan oleh angka. Seorang pemuda berjuang melawan takdirnya, mempertanyakan kebebasan sejati, dan berani untuk hidup di luar kehendak sistem.',
     ),
@@ -110,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return "Selamat malam";
     }
   }
+
   String? _welcomeMessage;
 
   @override
@@ -134,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Gradien untuk AppBar, warnanya akan berubah tergantung tema
     final List<Color> appBarGradientColors = [
       isDarkMode ? Colors.black : Colors.white,
-      isDarkMode ? Colors.grey.shade900 : const Color(0xFFBBDEFB),
+      isDarkMode ? Colors.grey.shade900 : Colors.grey.shade900,
     ];
 
     // Warna ikon dan teks di AppBar: menyesuaikan tema
@@ -265,9 +268,12 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.person, color: appBarIconColor),
+            icon: const Icon(Icons.person),
             onPressed: () {
-              Navigator.of(context).pushNamed('/profile');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
             },
           ),
         ],
@@ -319,10 +325,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderSide: BorderSide.none,
                   ),
                 ),
-                style: TextStyle(
-                    color: isDarkMode
-                        ? Colors.white
-                        : Colors.black), // ✅ Warna teks input
+                style:
+                    TextStyle(color: isDarkMode ? Colors.white : Colors.black),
               ),
             ),
             Expanded(
