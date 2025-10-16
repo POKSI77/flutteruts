@@ -33,7 +33,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
 
     _lottieController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000), // Durasi disetel
+      duration: const Duration(milliseconds: 1000),
     );
     _lottieController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -57,7 +57,42 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.book.title} added to cart!')));
+      SnackBar(content: Text('${widget.book.title} added to cart!')),
+    );
+  }
+
+  // ✅ Tambahan kecil untuk label kategori
+  Widget _buildTypeLabel(String type) {
+    Color color;
+    String text;
+    switch (type.toLowerCase()) {
+      case 'premium':
+        color = Colors.amber.shade700;
+        text = 'Premium';
+        break;
+      case 'sale':
+        color = Colors.redAccent;
+        text = 'Sale';
+        break;
+      default:
+        return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
   }
 
   @override
@@ -70,35 +105,46 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: InkWell(
         onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => BookDetailScreen(book: widget.book))),
+          context,
+          MaterialPageRoute(
+            builder: (_) => BookDetailScreen(book: widget.book),
+          ),
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: Stack(
             children: [
-              Image.network(widget.book.imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  errorBuilder: (c, e, s) =>
-                      const Center(child: Icon(Icons.book, size: 50))),
+              Image.network(
+                widget.book.imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (c, e, s) =>
+                    const Center(child: Icon(Icons.book, size: 50)),
+              ),
               Positioned.fill(
                 child: DecoratedBox(
-                    decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
                         Colors.black.withOpacity(0.7)
                       ],
-                      stops: const [
-                        0.5,
-                        1.0
-                      ]),
-                )),
+                      stops: const [0.5, 1.0],
+                    ),
+                  ),
+                ),
               ),
+
+              // ✅ Label kategori (Premium / Sale)
+              Positioned(
+                top: 8,
+                left: 8,
+                child: _buildTypeLabel(widget.book.type),
+              ),
+
               Positioned(
                 top: 8,
                 right: 8,
@@ -111,14 +157,18 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                       _animationControllerStar
                           .forward()
                           .then((_) => _animationControllerStar.reverse());
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              '${widget.book.title} added to favorites!')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                '${widget.book.title} added to favorites!')),
+                      );
                     } else {
                       favoriteModel.removeFavorite(widget.book);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              '${widget.book.title} removed from favorites!')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                '${widget.book.title} removed from favorites!')),
+                      );
                     }
                   },
                 ),
@@ -130,25 +180,33 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.book.title,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      widget.book.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 4),
-                    Text(widget.book.author,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 14)),
+                    Text(
+                      widget.book.author,
+                      style:
+                          const TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(widget.book.getDisplayPrice(),
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
+                        Text(
+                          widget.book.getDisplayPrice(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Stack(
                           alignment: Alignment.center,
                           children: [
@@ -178,8 +236,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                                         },
                                         repeat: false,
                                       )
-                                    : const SizedBox
-                                        .shrink();
+                                    : const SizedBox.shrink();
                               },
                             ),
                           ],

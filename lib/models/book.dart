@@ -7,6 +7,7 @@ class Book {
   final double price;
   final String imageUrl;
   final String description;
+  final String type;
   int quantity;
 
   Book({
@@ -16,6 +17,7 @@ class Book {
     required this.price,
     required this.imageUrl,
     required this.description,
+    this.type = 'regular',
     this.quantity = 1,
   }) {
     // Validasi quantity minimal 1
@@ -31,6 +33,7 @@ class Book {
       price: (json['price'] ?? 0).toDouble(),
       imageUrl: json['imageUrl'] ?? '',
       description: json['description'] ?? '',
+      type: json['type'] ?? 'regular',
       quantity: (json['quantity'] ?? 1) is int
           ? (json['quantity'] as int)
           : (json['quantity'] as num).toInt(),
@@ -49,6 +52,7 @@ class Book {
       'price': price,
       'imageUrl': imageUrl,
       'description': description,
+      'type': type,
       'quantity': quantity,
     };
   }

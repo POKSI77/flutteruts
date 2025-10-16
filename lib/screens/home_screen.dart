@@ -100,6 +100,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
+  // Pisahkan buku ke dalam kategori yang berbeda
+  List<Book> get _regularBooks =>
+      books.where((b) => b is! PremiumBook && b is! SaleBook).toList();
+  List<Book> get _premiumBooks =>
+      books.where((b) => b is PremiumBook).toList();
+  List<Book> get _saleBooks =>
+      books.where((b) => b is SaleBook).toList();
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour >= 0 && hour < 12) {
@@ -280,73 +288,96 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: AnimatedContainer(
         duration: const Duration(milliseconds: 500),
-        color: bodyBackgroundColor, // ✅ Mengubah warna background body
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                _welcomeMessage ?? 'Loading...',
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      color: isDarkMode
-                          ? Colors.white
-                          : Colors.black, // ✅ Sesuaikan warna teks
-                      fontWeight: FontWeight.bold,
+        color: bodyBackgroundColor,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  _welcomeMessage ?? 'Loading...',
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ).animate().slide(
+                      begin: const Offset(-1, 0),
+                      end: Offset.zero,
+                      duration: 500.ms,
+                      curve: Curves.easeOut,
                     ),
-              ).animate().slide(
-                    begin: const Offset(-1, 0),
-                    end: Offset.zero,
-                    duration: 500.ms,
-                    curve: Curves.easeOut,
-                  ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: TextField(
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'Cari judul atau penulis...',
-                  prefixIcon: Icon(Icons.search,
-                      color: isDarkMode
-                          ? Colors.white70
-                          : Colors.black54), // ✅ Warna ikon pencarian
-                  hintStyle: TextStyle(
-                      color: isDarkMode
-                          ? Colors.white70
-                          : Colors.black54), // ✅ Warna hint
-                  filled: true,
-                  // ignore: deprecated_member_use
-                  fillColor: isDarkMode
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.grey
-                          .withOpacity(0.1), // ✅ Latar belakang search bar
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                style:
-                    TextStyle(color: isDarkMode ? Colors.white : Colors.black),
               ),
-            ),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(8),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 0.6,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                  decoration: InputDecoration(
+                    hintText: 'Cari judul atau penulis...',
+                    prefixIcon: Icon(Icons.search,
+                        color: isDarkMode ? Colors.white70 : Colors.black54),
+                    hintStyle:
+                        TextStyle(color: isDarkMode ? Colors.white70 : Colors.black54),
+                    filled: true,
+                    fillColor: isDarkMode
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.grey.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
                 ),
-                itemCount: _filteredBooks.length,
-                itemBuilder: (context, index) {
-                  return BookCard(book: _filteredBooks[index]);
-                },
               ),
-            ),
-          ],
+              // Bagian Buku Biasa
+              _buildBookSection('Reguler', _regularBooks, isDarkMode),
+              // Bagian Buku Premium
+              _buildBookSection('Premium', _premiumBooks, isDarkMode),
+              // Bagian Buku Diskon
+              _buildBookSection('Diskon', _saleBooks, isDarkMode),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBookSection(String title, List<Book> books, bool isDarkMode) {
+    if (books.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 340, // ✅ Nilai tinggi diubah
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            itemCount: books.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: SizedBox(
+                  width: 220, // ✅ Nilai lebar diubah
+                  child: BookCard(book: books[index]),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
