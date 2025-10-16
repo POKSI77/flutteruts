@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl:
           'https://images.weserv.nl/?url=static.mizanstore.com/d/img/book/cover/covBK001247.jpg',
       description:
-          'Berdasarkan kisah nyata, novel horor ini mengisahkan Risa Saraswati, seorang indigo yang bisa melihat dan berinteraksi dengan hantu-hantu anak Belanda. Ikuti perjalanannya saat ia mencoba memahami dunia para arwah yang berada di balik gerbang dialognya.',
+          'Berdasarkan kisah nyata, novel horor ini mengisahkan Risa Saraswati, seorang indigo yang bisa melihat dan berinteraksi dengan hantu-hantu anak Belanda.',
     ),
     SaleBook(
       id: '4',
@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl:
           'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/id/1/19/Dilan_1990_%28poster%29.jpg',
       description:
-          'Sebuah kisah romansa masa remaja yang berlatar belakang Kota Bandung tahun 1990. Saat Milea pindah ke sekolah baru, ia bertemu Dilan, seorang panglima geng motor yang cerdas dan unik. Novel ini akan membawa Anda kembali ke manisnya cinta pertama dan kenangan masa sekolah.',
+          'Sebuah kisah romansa masa remaja berlatar Kota Bandung tahun 1990. Saat Milea pindah ke sekolah baru, ia bertemu Dilan, panglima geng motor yang unik dan cerdas.',
     ),
     Book(
       id: '5',
@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl:
           'https://images.weserv.nl/npr.brightspotcdn.com/dims4/default/48e622e/2147483647/strip/true/crop/363x574+0+0/resize/1760x2784!/format/webp/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Flegacy%2Fsites%2Fwkar%2Ffiles%2Fcatcher_in_the_rye_cover.png',
       description:
-          'Ikuti petualangan Holden Caulfield, seorang remaja yang sinis dan pemberontak, dalam perjalanannya melintasi New York City. Sebuah kisah klasik tentang pencarian jati diri, melawan kemunafikan, dan memahami arti kedewasaan.',
+          'Ikuti petualangan Holden Caulfield, seorang remaja yang sinis dan pemberontak dalam perjalanannya melintasi New York City.',
     ),
   ];
 
@@ -100,7 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
-  // Pisahkan buku ke dalam kategori yang berbeda
   List<Book> get _regularBooks =>
       books.where((b) => b is! PremiumBook && b is! SaleBook).toList();
   List<Book> get _premiumBooks =>
@@ -142,17 +141,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isDarkMode = themeNotifier.isDark;
 
-    // Gradien untuk AppBar, warnanya akan berubah tergantung tema
     final List<Color> appBarGradientColors = [
       isDarkMode ? Colors.black : Colors.white,
-      isDarkMode ? Colors.grey.shade900 : Colors.grey.shade900,
+      isDarkMode ? Colors.grey.shade900 : const Color.fromARGB(255, 159, 200, 216),
     ];
 
-    // Warna ikon dan teks di AppBar: menyesuaikan tema
     final Color appBarIconColor = isDarkMode ? Colors.white : Colors.black;
     final Color appBarTextColor = isDarkMode ? Colors.white : Colors.black;
-
-    // Warna latar belakang body: putih untuk terang, abu-abu gelap untuk gelap
     final Color bodyBackgroundColor =
         isDarkMode ? Colors.black87 : Colors.white;
 
@@ -169,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: appBarGradientColors, // ✅ Gradien yang dinamis
+              colors: appBarGradientColors,
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -316,8 +311,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     hintText: 'Cari judul atau penulis...',
                     prefixIcon: Icon(Icons.search,
                         color: isDarkMode ? Colors.white70 : Colors.black54),
-                    hintStyle:
-                        TextStyle(color: isDarkMode ? Colors.white70 : Colors.black54),
+                    hintStyle: TextStyle(
+                        color: isDarkMode ? Colors.white70 : Colors.black54),
                     filled: true,
                     fillColor: isDarkMode
                         ? Colors.white.withOpacity(0.1)
@@ -330,12 +325,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
                 ),
               ),
-              // Bagian Buku Biasa
-              _buildBookSection('Reguler', _regularBooks, isDarkMode),
-              // Bagian Buku Premium
-              _buildBookSection('Premium', _premiumBooks, isDarkMode),
-              // Bagian Buku Diskon
-              _buildBookSection('Diskon', _saleBooks, isDarkMode),
+
+              // ✅ Bagian ini diubah agar search aktif
+              if (_searchQuery.trim().isNotEmpty)
+                _buildBookSection('Hasil Pencarian', _filteredBooks, isDarkMode)
+              else ...[
+                _buildBookSection('Reguler', _regularBooks, isDarkMode),
+                _buildBookSection('Premium', _premiumBooks, isDarkMode),
+                _buildBookSection('Diskon', _saleBooks, isDarkMode),
+              ],
             ],
           ),
         ),
@@ -345,7 +343,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBookSection(String title, List<Book> books, bool isDarkMode) {
     if (books.isEmpty) {
-      return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          'Buku tidak ditemukan.',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white70 : Colors.black54,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         SizedBox(
-          height: 340, // ✅ Nilai tinggi diubah
+          height: 340,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -370,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: SizedBox(
-                  width: 220, // ✅ Nilai lebar diubah
+                  width: 220,
                   child: BookCard(book: books[index]),
                 ),
               );
@@ -382,10 +389,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Full BookCard with favorite + cart + animations
+// Book Card
 class BookCard extends StatefulWidget {
   final Book book;
-
   const BookCard({Key? key, required this.book}) : super(key: key);
 
   @override
@@ -400,19 +406,14 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _animationControllerStar = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-
-    _lottieController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000), // Duration adjusted
-    );
+    _animationControllerStar =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+    _lottieController =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
     _lottieController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         setState(() {
-          _isLottieVisible = false; // Hide Lottie after it's done
+          _isLottieVisible = false;
         });
         _lottieController.reset();
       }
@@ -428,22 +429,18 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
 
   void _onAddToCart() {
     Provider.of<CartModel>(context, listen: false).addItem(widget.book);
-
-    // Show Lottie and start animation
     setState(() {
       _isLottieVisible = true;
     });
     _lottieController.forward(from: 0.0);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.book.title} added to cart!')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('${widget.book.title} added to cart!')));
   }
 
   @override
   Widget build(BuildContext context) {
     final favoriteModel = Provider.of<FavoriteModel>(context);
     final isFavorite = favoriteModel.isFavorite(widget.book);
-
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isDarkMode = themeNotifier.isDark;
 
@@ -452,35 +449,32 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: InkWell(
         onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (_) => BookDetailScreen(book: widget.book))),
+          context,
+          MaterialPageRoute(builder: (_) => BookDetailScreen(book: widget.book)),
+        ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
           child: Stack(
             children: [
-              Image.network(widget.book.imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  errorBuilder: (c, e, s) =>
-                      const Center(child: Icon(Icons.book, size: 50))),
+              Image.network(
+                widget.book.imageUrl,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                errorBuilder: (c, e, s) =>
+                    const Center(child: Icon(Icons.book, size: 50)),
+              ),
               Positioned.fill(
                 child: DecoratedBox(
-                    decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        // ignore: deprecated_member_use
-                        Colors.black.withOpacity(0.7)
-                      ],
-                      stops: const [
-                        0.5,
-                        1.0
-                      ]),
-                )),
+                      colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                      stops: const [0.5, 1.0],
+                    ),
+                  ),
+                ),
               ),
               Positioned(
                 top: 8,
@@ -495,13 +489,13 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                           .forward()
                           .then((_) => _animationControllerStar.reverse());
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              '${widget.book.title} added to special books!')));
+                          content:
+                              Text('${widget.book.title} added to favorites!')));
                     } else {
                       favoriteModel.removeFavorite(widget.book);
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(
-                              '${widget.book.title} removed from special books!')));
+                          content:
+                              Text('${widget.book.title} removed from favorites!')));
                     }
                   },
                 ),
@@ -522,8 +516,8 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Text(widget.book.author,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 14)),
+                        style:
+                            const TextStyle(color: Colors.white70, fontSize: 14)),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -537,9 +531,8 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                color: isDarkMode
-                                    ? Colors.grey.shade800
-                                    : Colors.white,
+                                color:
+                                    isDarkMode ? Colors.grey.shade800 : Colors.white,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: IconButton(
