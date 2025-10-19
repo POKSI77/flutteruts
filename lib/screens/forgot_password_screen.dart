@@ -22,11 +22,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       });
 
       try {
-        final resetToken = await _authService.generateResetToken(_emailController.text);
+        final resetToken =
+            await _authService.generateResetToken(_emailController.text);
 
         if (!mounted) return;
 
-        // Navigasi ke halaman reset password dan kirimkan email serta token
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => ResetPasswordScreen(

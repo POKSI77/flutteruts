@@ -21,8 +21,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _confirmPasswordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
-  bool _newPasswordVisible = false; // Variabel untuk new password
-  bool _confirmPasswordVisible = false; // Variabel untuk confirm password
+  bool _newPasswordVisible = false; 
+  bool _confirmPasswordVisible = false; 
 
   Future<void> _handlePasswordReset() async {
     if (_formKey.currentState!.validate()) {

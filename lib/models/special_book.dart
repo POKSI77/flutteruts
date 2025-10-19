@@ -1,5 +1,3 @@
-// lib/models/special_book.dart
-
 import 'book.dart';
 
 class PremiumBook extends Book {
@@ -13,7 +11,8 @@ class PremiumBook extends Book {
     required super.imageUrl,
     required super.description,
     required double bonusPrice,
-  }) : _bonusPrice = bonusPrice, super(quantity: 1);
+  })  : _bonusPrice = bonusPrice,
+        super(quantity: 1);
 
   double get bonusPrice => _bonusPrice;
 
@@ -28,7 +27,6 @@ class PremiumBook extends Book {
     return 'Rp ${(price + _bonusPrice).toStringAsFixed(0)} (Premium)';
   }
 
-  // Tambahkan override ini
   @override
   double getDisplayPriceValue() {
     return price + _bonusPrice;
@@ -46,7 +44,8 @@ class SaleBook extends Book {
     required super.imageUrl,
     required super.description,
     required int discountPercentage,
-  }) : _discountPercentage = discountPercentage, super(quantity: 1);
+  })  : _discountPercentage = discountPercentage,
+        super(quantity: 1);
 
   int get discountPercentage => _discountPercentage;
 

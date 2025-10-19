@@ -35,17 +35,14 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       final users = prefs.getStringList(_usersKey) ?? [];
 
-      // Validate username
       if (username.length < 3) {
         throw Exception('Username must be at least 3 characters');
       }
 
-      // Validate password
       if (!_isValidPassword(password)) {
         throw Exception('Password must be at least 6 characters');
       }
 
-      // Check if username or email already exists
       final isExisting = await isUserExists(username, email);
       if (isExisting) {
         throw Exception('Username or email already registered');

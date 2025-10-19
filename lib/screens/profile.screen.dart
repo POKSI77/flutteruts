@@ -1,5 +1,3 @@
-// lib/screens/profile.screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_screen.dart';
@@ -77,6 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
+                // ignore: deprecated_member_use
                 color: Theme.of(context).primaryColor.withOpacity(0.1),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(30),
@@ -90,6 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
+                      // ignore: deprecated_member_use
                       color: Theme.of(context).primaryColor.withOpacity(0.2),
                     ),
                     child: Icon(
@@ -124,27 +124,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     leading: const Icon(Icons.person_outline),
                     title: const Text('Edit Profile'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Implement edit profile functionality
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.settings_outlined),
                     title: const Text('Settings'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Implement settings functionality
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(
                     leading: const Icon(Icons.help_outline),
                     title: const Text('Help & Support'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Implement help functionality
-                    },
+                    onTap: () {},
                   ),
                   const Divider(),
                   ListTile(

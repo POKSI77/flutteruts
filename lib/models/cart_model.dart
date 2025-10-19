@@ -37,7 +37,7 @@ class CartItem {
 
 class CartModel with ChangeNotifier {
   List<CartItem> _items = [];
-  String? _currentUserKey; // ✅ Mengubah nama variabel
+  String? _currentUserKey;
 
   List<CartItem> get items => _items;
 
@@ -46,17 +46,15 @@ class CartModel with ChangeNotifier {
 
   int get itemCount => _items.length;
 
-  /// Set email user saat login (agar data cart spesifik user)
-  void setUserKey(String? email) { // ✅ Mengubah nama metode
+  void setUserKey(String? email) {
     if (email != null) {
       _currentUserKey = 'cart_${email.replaceAll("@", "_")}';
     } else {
       _currentUserKey = null;
     }
-    loadCart(); // ✅ Memuat data segera setelah kunci disetel
+    loadCart();
   }
 
-  /// Load cart dari SharedPreferences
   Future<void> loadCart() async {
     if (_currentUserKey == null) {
       _items = [];
@@ -75,7 +73,6 @@ class CartModel with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Simpan cart ke SharedPreferences
   Future<void> saveCart() async {
     if (_currentUserKey == null) return;
     final prefs = await SharedPreferences.getInstance();
@@ -85,7 +82,6 @@ class CartModel with ChangeNotifier {
     );
   }
 
-  /// Tambahkan item dari objek Book
   Future<void> addItem(Book book) async {
     final existingItemIndex = _items.indexWhere((item) => item.id == book.id);
     if (existingItemIndex >= 0) {
@@ -102,14 +98,12 @@ class CartModel with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Hapus item dari cart
   Future<void> removeItem(Book book) async {
     _items.removeWhere((item) => item.id == book.id);
     await saveCart();
     notifyListeners();
   }
 
-  /// Kurangi quantity item
   Future<void> decrementQuantity(Book book) async {
     final existingItemIndex = _items.indexWhere((item) => item.id == book.id);
     if (existingItemIndex >= 0) {
@@ -123,7 +117,6 @@ class CartModel with ChangeNotifier {
     }
   }
 
-  /// Kosongkan seluruh cart
   Future<void> clearCart() async {
     _items.clear();
     if (_currentUserKey != null) {

@@ -1,5 +1,3 @@
-// lib/screens/auth_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -93,7 +91,8 @@ class _AuthScreenState extends State<AuthScreen>
 
           if (success) {
             final userEmail = _emailController.text.trim();
-            final favoriteModel = Provider.of<FavoriteModel>(context, listen: false);
+            final favoriteModel =
+                Provider.of<FavoriteModel>(context, listen: false);
             final cartModel = Provider.of<CartModel>(context, listen: false);
 
             await favoriteModel.setUser(userEmail);
@@ -158,28 +157,25 @@ class _AuthScreenState extends State<AuthScreen>
                   color: Colors.white.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    // Bayangan utama untuk elevasi
                     BoxShadow(
                       // ignore: deprecated_member_use
                       color: Colors.black.withOpacity(0.1),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
-                    // Efek glow di bagian bawah (biru)
                     BoxShadow(
                       // ignore: deprecated_member_use
                       color: const Color(0xFF2575FC).withOpacity(0.4),
-                      blurRadius: 60, // ✅ Nilai blur ditingkatkan
-                      spreadRadius: 5, // ✅ Nilai spread ditingkatkan
-                      offset: const Offset(0, 20), // ✅ Offset ditingkatkan
+                      blurRadius: 60,
+                      spreadRadius: 5,
+                      offset: const Offset(0, 20),
                     ),
-                    // Efek glow di bagian atas (ungu)
                     BoxShadow(
                       // ignore: deprecated_member_use
                       color: const Color(0xFF6A11CB).withOpacity(0.3),
-                      blurRadius: 60, // ✅ Nilai blur ditingkatkan
-                      spreadRadius: 5, // ✅ Nilai spread ditingkatkan
-                      offset: const Offset(0, -20), // ✅ Offset ditingkatkan
+                      blurRadius: 60,
+                      spreadRadius: 5,
+                      offset: const Offset(0, -20),
                     ),
                   ],
                 ),
@@ -221,8 +217,6 @@ class _AuthScreenState extends State<AuthScreen>
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                         const SizedBox(height: 30),
-
-                        // Form Fields
                         if (!isLogin) ...[
                           TextFormField(
                             controller: _usernameController,
@@ -234,7 +228,6 @@ class _AuthScreenState extends State<AuthScreen>
                           ),
                           const SizedBox(height: 16),
                         ],
-
                         TextFormField(
                           controller: _emailController,
                           decoration: _inputDecoration(
@@ -245,12 +238,11 @@ class _AuthScreenState extends State<AuthScreen>
                               : null,
                         ),
                         const SizedBox(height: 16),
-
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !_passwordVisible,
-                          decoration: _inputDecoration('Password', Icons.lock)
-                              .copyWith(
+                          decoration:
+                              _inputDecoration('Password', Icons.lock).copyWith(
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _passwordVisible
@@ -258,14 +250,13 @@ class _AuthScreenState extends State<AuthScreen>
                                     : Icons.visibility_off,
                                 color: Colors.grey,
                               ),
-                              onPressed: () => setState(() =>
-                                  _passwordVisible = !_passwordVisible),
+                              onPressed: () => setState(
+                                  () => _passwordVisible = !_passwordVisible),
                             ),
                           ),
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Enter password' : null,
                         ),
-
                         if (isLogin)
                           Align(
                             alignment: Alignment.centerRight,
@@ -285,15 +276,14 @@ class _AuthScreenState extends State<AuthScreen>
                               ),
                             ),
                           ),
-
                         if (!isLogin) ...[
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _confirmPasswordController,
                             obscureText: !_confirmPasswordVisible,
-                            decoration: _inputDecoration(
-                                    'Confirm Password', Icons.lock)
-                                .copyWith(
+                            decoration:
+                                _inputDecoration('Confirm Password', Icons.lock)
+                                    .copyWith(
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _confirmPasswordVisible
@@ -312,7 +302,6 @@ class _AuthScreenState extends State<AuthScreen>
                           ),
                         ],
                         const SizedBox(height: 24),
-
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -354,14 +343,14 @@ class _AuthScreenState extends State<AuthScreen>
                                   : Text(
                                       isLogin ? 'Login' : 'Register',
                                       style: const TextStyle(
-                                          fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                                          fontSize: 16,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold),
                                     ),
                             ),
                           ),
                         ),
-                        
                         const SizedBox(height: 16),
-                        
                         TextButton(
                           onPressed: _toggleForm,
                           child: Text(

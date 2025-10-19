@@ -10,8 +10,8 @@ import 'models/special_book_model.dart';
 import 'models/favorite_model.dart';
 import 'screens/profile.screen.dart';
 import 'firebase_options.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-// Theme notifier
 class ThemeNotifier extends ChangeNotifier {
   bool _isDark = false;
   bool get isDark => _isDark;
@@ -58,10 +58,16 @@ class PokBookApp extends StatelessWidget {
           theme: ThemeData(
             primarySwatch: Colors.blue,
             brightness: Brightness.light,
+            textTheme: GoogleFonts.poppinsTextTheme(
+              Theme.of(context).textTheme,
+            ),
           ),
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             primarySwatch: Colors.blue,
+            textTheme: GoogleFonts.poppinsTextTheme(
+              Theme.of(context).textTheme,
+            ),
           ),
           initialRoute: '/splash',
           routes: {

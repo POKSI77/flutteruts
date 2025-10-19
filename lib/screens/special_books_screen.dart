@@ -59,7 +59,6 @@ class SpecialBooksScreen extends StatelessWidget {
                     },
                   ),
                   onTap: () {
-                    // Navigasi ke detail buku saat list item diklik
                     Navigator.push(
                       context,
                       MaterialPageRoute(

@@ -1,5 +1,3 @@
-// lib/services/auth_service.dart
-
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,12 +13,10 @@ class AuthService {
   static const String _isLoggedInKey = 'isLoggedIn';
   final _uuid = const Uuid();
 
-  // Singleton pattern
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
 
-  /// ==================== REGISTER ====================
   Future<void> register(String username, String email, String password) async {
     try {
       // Create user in Firebase Auth
@@ -36,7 +32,6 @@ class AuthService {
         'createdAt': DateTime.now(),
       });
 
-      // Save login state
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('username', username);
@@ -62,7 +57,6 @@ class AuthService {
     }
   }
 
-  /// ==================== LOGIN ====================
   Future<bool> login(String usernameOrEmail, String password) async {
     try {
       // Sign in with Firebase Auth
@@ -71,7 +65,6 @@ class AuthService {
         password: password,
       );
 
-      // Get user data from Firestore
       final userData = await _firestore
           .collection('users')
           .doc(userCredential.user!.uid)
@@ -110,26 +103,22 @@ class AuthService {
     }
   }
 
-  /// ==================== LOGOUT ====================
   Future<void> logout() async {
     await _auth.signOut();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
 
-  /// ==================== CHECK SESSION ====================
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isLoggedInKey) ?? false;
   }
 
-  // ✅ Mengubah ini untuk mendapatkan email pengguna, bukan username
   Future<String?> getCurrentUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_currentUserKey);
   }
 
-  /// ==================== USER EXIST CHECK ====================
   Future<bool> _isUserExists(String username, String email) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -178,20 +167,16 @@ class AuthService {
             'email': userData.email,
           };
         }
-      } catch (e) {
-        // skip jika data rusak
-      }
+      } catch (e) {}
     }
 
     return null;
   }
 
-  /// ==================== RESET PASSWORD ====================
   Future<String> generateResetToken(String email) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Check if user exists
       if (!await isUserRegistered(email)) {
         throw Exception('No account found with this email');
       }
@@ -217,7 +202,6 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // Verify token
       final storedTokenJson = prefs.getString('reset_token_$email');
       if (storedTokenJson == null) {
         throw Exception('Invalid or expired reset token');
@@ -259,7 +243,6 @@ class AuthService {
     }
   }
 
-  /// ==================== HELPERS ====================
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }

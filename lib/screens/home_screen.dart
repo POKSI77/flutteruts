@@ -1,8 +1,7 @@
-// lib/screens/home_screen.dart
-
 import 'package:bookstore_app/main.dart';
 import 'package:bookstore_app/screens/profile.screen.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,13 +11,12 @@ import 'cart_screen.dart';
 import 'book_detail_screen.dart';
 import '../services/auth_service.dart';
 import '../models/cart_model.dart';
-import '../models/special_book.dart';
 import '../models/favorite_model.dart';
 import 'package:favorite_button/favorite_button.dart';
 import 'favorite_screen.dart';
 import 'package:lottie/lottie.dart';
+import '../widgets/book_card.dart';
 
-// Home Screen
 class HomeScreen extends StatefulWidget {
   final String? username;
 
@@ -43,18 +41,19 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl:
           'https://images.weserv.nl/?url=image.gramedia.net/rs:fit:0:0/plain/https://cdn.gramedia.com/uploads/products/95ob5m98ur.jpg',
       description:
-          'Kumpulan cerita pendek yang merenungkan tentang hidup, kematian, dan makna di balik momen-momen kecil yang tak terduga. Sebuah renungan manis pahit yang mengajak Anda menemukan keindahan dalam kesederhanaan.',
+          'Kumpulan cerita pendek yang merenungkan tentang hidup, kematian, dan makna di balik momen-momen kecil yang tak terduga. Penulis mengajak kita menyelami pemikiran tokoh-tokohnya saat menghadapi titik krusial dalam hidup, seringkali dengan sentuhan melankolis namun penuh harapan, seperti kehangatan semangkuk mie ayam.',
     ),
-    PremiumBook(
+    Book(
       id: '2',
       title: '3726',
       author: 'A. Fuadi',
       price: 50000,
-      bonusPrice: 5,
       imageUrl:
           'https://images.weserv.nl/?url=cdn.gramedia.com/uploads/products/9397p4603v.jpg',
       description:
-          'Di masa depan, sebuah sistem mengatur seluruh aspek kehidupan, bahkan nasib seseorang ditentukan oleh angka. Seorang pemuda berjuang melawan takdirnya, mempertanyakan kebebasan sejati, dan berani untuk hidup di luar kehendak sistem.',
+          'Dalam dunia masa depan yang diatur oleh sistem angka absolut, nasib setiap individu telah ditentukan. Seorang pemuda dengan nomor 3726 menolak takdirnya dan memulai perjuangan berbahaya untuk mencari arti kebebasan sejati, menentang sistem yang mengontrol segalanya.',
+      type: 'premium',
+      bonusPrice: 5000,
     ),
     Book(
       id: '3',
@@ -64,18 +63,18 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl:
           'https://images.weserv.nl/?url=static.mizanstore.com/d/img/book/cover/covBK001247.jpg',
       description:
-          'Berdasarkan kisah nyata, novel horor ini mengisahkan Risa Saraswati, seorang indigo yang bisa melihat dan berinteraksi dengan hantu-hantu anak Belanda.',
+          'Berdasarkan pengalaman nyata penulis sebagai seorang indigo, buku ini membuka pintu ke dunia lain. Risa berbagi kisahnya berkomunikasi dengan teman-teman gaibnya—lima hantu anak Belanda—mengungkap tragedi masa lalu mereka dan ikatan unik yang terjalin.',
     ),
-    SaleBook(
+    Book(
       id: '4',
-      title: 'Dilan: Dia Adalah Dilanku Tahun 1990',
-      author: 'Pidi Baiq',
-      price: 80000,
-      discountPercentage: 20,
+      title: 'Nineteen Eighty-Four (1984)',
+      author: 'George Orwell',
+      price: 110000,
       imageUrl:
-          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/id/1/19/Dilan_1990_%28poster%29.jpg',
+          'https://images.weserv.nl/?url=cdn.gramedia.com/uploads/products/8n-45t7t60.jpg',
       description:
-          'Sebuah kisah romansa masa remaja berlatar Kota Bandung tahun 1990. Saat Milea pindah ke sekolah baru, ia bertemu Dilan, panglima geng motor yang unik dan cerdas.',
+          'Sebuah novel distopia klasik yang mengerikan tentang dunia totaliter Oceania, di mana Partai mengontrol setiap aspek kehidupan di bawah pengawasan Big Brother. Winston Smith memulai pemberontakan pribadi yang berbahaya terhadap rezim yang menindas pikiran dan kebenaran.',
+      discountPercentage: 15,
     ),
     Book(
       id: '5',
@@ -85,7 +84,113 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl:
           'https://images.weserv.nl/npr.brightspotcdn.com/dims4/default/48e622e/2147483647/strip/true/crop/363x574+0+0/resize/1760x2784!/format/webp/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Flegacy%2Fsites%2Fwkar%2Ffiles%2Fcatcher_in_the_rye_cover.png',
       description:
-          'Ikuti petualangan Holden Caulfield, seorang remaja yang sinis dan pemberontak dalam perjalanannya melintasi New York City.',
+          'Novel klasik Amerika tentang kegelisahan remaja melalui sudut pandang Holden Caulfield yang sinis dan pemberontak. Setelah dikeluarkan dari sekolah, ia menghabiskan beberapa hari di New York, merenungkan kepalsuan dunia dewasa, kehilangan, dan pencarian makna hidup.',
+    ),
+    Book(
+      id: '6',
+      title: 'Bumi Manusia',
+      author: 'Pramoedya Ananta Toer',
+      price: 95000,
+      imageUrl:
+          'https://images.weserv.nl/?url=https://upload.wikimedia.org/wikipedia/id/thumb/5/51/Bumi_Manusia_poster.jpg/500px-Bumi_Manusia_poster.jpg',
+      description:
+          'Bagian pertama dari Tetralogi Buru yang legendaris, berlatar Hindia Belanda awal abad ke-20. Mengisahkan Minke, seorang priyayi Jawa terpelajar, yang jatuh cinta pada Annelies Mellema, seorang Indo-Belanda, dan harus menghadapi konflik rasial, sosial, dan politik era kolonial.',
+    ),
+    Book(
+      id: '7',
+      title: 'Laskar Pelangi',
+      author: 'Andrea Hirata',
+      price: 70000,
+      imageUrl:
+          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/id/8/8e/Laskar_pelangi_sampul.jpg',
+      description:
+          'Kisah inspiratif tentang sepuluh anak dari keluarga miskin di Pulau Belitong yang bersekolah di SD Muhammadiyah Gantong yang hampir rubuh. Dipimpin oleh Ikal dan Lintang yang jenius, mereka berjuang meraih mimpi melalui pendidikan dengan semangat persahabatan yang kuat.',
+    ),
+    Book(
+      id: '8',
+      title: 'The Hobbit',
+      author: 'J.R.R. Tolkien',
+      price: 135000,
+      imageUrl:
+          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/4/4a/TheHobbit_FirstEdition.jpg/220px-TheHobbit_FirstEdition.jpg',
+      description:
+          'Petualangan epik Bilbo Baggins, seorang hobbit yang mencintai kenyamanan rumahnya, saat ia secara tak terduga direkrut oleh penyihir Gandalf dan tiga belas kurcaci untuk melakukan perjalanan berbahaya merebut kembali harta karun yang dicuri oleh naga Smaug di Lonely Mountain.',
+    ),
+    Book(
+      id: '9',
+      title: 'Negeri 5 Menara',
+      author: 'Ahmad Fuadi',
+      price: 75000,
+      imageUrl:
+          'https://images.weserv.nl/?url=s3-ap-southeast-1.amazonaws.com/ebook-previews/1682/10530/1.jpg',
+      description:
+          'Terinspirasi dari kisah nyata, novel ini mengikuti perjalanan Alif Fikri dari Minangkabau ke Pondok Madani Gontor di Jawa Timur. Bersama lima sahabatnya, ia belajar tentang disiplin, persahabatan, impian, dan kekuatan mantra "Man Jadda Wajada" (Siapa yang bersungguh-sungguh akan berhasil).',
+    ),
+    Book(
+      id: '10',
+      title: 'Supernova: KPBJ',
+      author: 'Dee Lestari',
+      price: 110000,
+      imageUrl:
+          'https://images.weserv.nl/?url=static.mizanstore.com/d/img/book/cover/covBT-533.jpg',
+      description:
+          'Buku pertama dari seri fiksi ilmiah-filosofis Supernova. Dua pasangan gay, Reuben dan Dimas, menciptakan cerita fiksi tentang Ksatria, Puteri, dan Bintang Jatuh yang ternyata memiliki keterkaitan misterius dengan tokoh nyata bernama Ferre, Rana, dan Diva.',
+      type: 'premium',
+      bonusPrice: 7500,
+    ),
+    Book(
+      id: '11',
+      title: 'The Da Vinci Code',
+      author: 'Dan Brown',
+      price: 150000,
+      imageUrl:
+          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/6/6b/DaVinciCode.jpg/220px-DaVinciCode.jpg',
+      description:
+          'Sebuah thriller misteri yang mendebarkan. Simbolog Harvard, Robert Langdon, terlibat dalam penyelidikan pembunuhan di Louvre yang membawanya mengungkap konspirasi kuno terkait Holy Grail, tersembunyi dalam karya seni Leonardo da Vinci dan sejarah rahasia Kekristenan.',
+      discountPercentage: 20,
+    ),
+    Book(
+      id: '12',
+      title: 'Cantik Itu Luka',
+      author: 'Eka Kurniawan',
+      price: 88000,
+      imageUrl:
+          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/id/d/d2/CiL_%28sampul%29.jpg',
+      description:
+          'Sebuah novel epik yang memadukan sejarah Indonesia dari era kolonial hingga Orde Baru dengan unsur realisme magis, kekerasan, dan humor gelap. Mengisahkan kehidupan tragis Dewi Ayu dan keempat putrinya di kota fiksi Halimunda.',
+      discountPercentage: 10,
+    ),
+    Book(
+      id: '13',
+      title: 'Harry Potter and the Sorcerer\'s Stone',
+      author: 'J.K. Rowling',
+      price: 150000,
+      imageUrl:
+          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/6/6b/Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg/220px-Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg',
+      description:
+          'Buku pertama yang memperkenalkan dunia sihir Harry Potter. Harry, seorang yatim piatu yang tinggal bersama paman dan bibinya yang kejam, mengetahui di ulang tahunnya yang kesebelas bahwa ia adalah seorang penyihir dan diundang ke Sekolah Sihir Hogwarts.',
+      type: 'premium',
+      bonusPrice: 7500,
+    ),
+    Book(
+      id: '14',
+      title: 'To Kill a Mockingbird',
+      author: 'Harper Lee',
+      price: 120000,
+      imageUrl:
+          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/4/4f/To_Kill_a_Mockingbird_%28first_edition_cover%29.jpg/220px-To_Kill_a_Mockingbird_%28first_edition_cover%29.jpg',
+      description:
+          'Novel klasik Amerika pemenang Pulitzer Prize, berlatar Depresi Besar di Alabama. Diceritakan melalui mata Scout Finch, novel ini mengeksplorasi tema rasisme, prasangka, dan moralitas saat ayahnya, pengacara Atticus Finch, membela Tom Robinson, seorang pria kulit hitam yang dituduh secara salah.',
+    ),
+    Book(
+      id: '15',
+      title: 'The Little Prince',
+      author: 'Antoine de Saint-Exupéry',
+      price: 90000,
+      imageUrl:
+          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/0/05/Littleprince.JPG/220px-Littleprince.JPG',
+      description:
+          'Kisah puitis dan filosofis tentang seorang pilot yang pesawatnya jatuh di Gurun Sahara dan bertemu dengan seorang anak laki-laki misterius, Pangeran Kecil, yang berasal dari asteroid kecil. Melalui percakapan mereka, buku ini membahas tema kesepian, persahabatan, cinta, kehilangan, dan makna hidup.',
     ),
   ];
 
@@ -100,12 +205,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
-  List<Book> get _regularBooks =>
-      books.where((b) => b is! PremiumBook && b is! SaleBook).toList();
-  List<Book> get _premiumBooks =>
-      books.where((b) => b is PremiumBook).toList();
-  List<Book> get _saleBooks =>
-      books.where((b) => b is SaleBook).toList();
+  List<Book> get _regularBooks => books
+      .where((b) => !b.isDiscounted && b.type.toLowerCase() != 'premium')
+      .toList();
+  List<Book> get _premiumBooks => books
+      .where((b) => !b.isDiscounted && b.type.toLowerCase() == 'premium')
+      .toList();
+  List<Book> get _saleBooks => books.where((b) => b.isDiscounted).toList();
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -143,7 +249,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final List<Color> appBarGradientColors = [
       isDarkMode ? Colors.black : Colors.white,
-      isDarkMode ? Colors.grey.shade900 : const Color.fromARGB(255, 159, 200, 216),
+      isDarkMode
+          ? Colors.grey.shade900
+          : const Color.fromARGB(255, 159, 200, 216),
     ];
 
     final Color appBarIconColor = isDarkMode ? Colors.white : Colors.black;
@@ -154,13 +262,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Bookstore',
+          'PokBook',
           style: TextStyle(
             color: appBarTextColor,
             fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.braahOne().fontFamily,
           ),
         ),
-        centerTitle: true,
+        centerTitle: false,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -304,7 +413,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
                   onChanged: (v) => setState(() => _searchQuery = v),
                   decoration: InputDecoration(
@@ -315,18 +425,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: isDarkMode ? Colors.white70 : Colors.black54),
                     filled: true,
                     fillColor: isDarkMode
+                        // ignore: deprecated_member_use
                         ? Colors.white.withOpacity(0.1)
+                        // ignore: deprecated_member_use
                         : Colors.grey.withOpacity(0.1),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+                  style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black),
                 ),
               ),
-
-              // ✅ Bagian ini diubah agar search aktif
               if (_searchQuery.trim().isNotEmpty)
                 _buildBookSection('Hasil Pencarian', _filteredBooks, isDarkMode)
               else ...[
@@ -343,16 +454,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBookSection(String title, List<Book> books, bool isDarkMode) {
     if (books.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(
-          'Buku tidak ditemukan.',
-          style: TextStyle(
-            color: isDarkMode ? Colors.white70 : Colors.black54,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-      );
+      return const SizedBox.shrink();
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,9 +464,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              color: isDarkMode ? Colors.white : Colors.black,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
         ),
         SizedBox(
@@ -385,189 +487,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
-    );
-  }
-}
-
-// Book Card
-class BookCard extends StatefulWidget {
-  final Book book;
-  const BookCard({Key? key, required this.book}) : super(key: key);
-
-  @override
-  State<BookCard> createState() => _BookCardState();
-}
-
-class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
-  late AnimationController _animationControllerStar;
-  late AnimationController _lottieController;
-  bool _isLottieVisible = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationControllerStar =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-    _lottieController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
-    _lottieController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        setState(() {
-          _isLottieVisible = false;
-        });
-        _lottieController.reset();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _animationControllerStar.dispose();
-    _lottieController.dispose();
-    super.dispose();
-  }
-
-  void _onAddToCart() {
-    Provider.of<CartModel>(context, listen: false).addItem(widget.book);
-    setState(() {
-      _isLottieVisible = true;
-    });
-    _lottieController.forward(from: 0.0);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('${widget.book.title} added to cart!')));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final favoriteModel = Provider.of<FavoriteModel>(context);
-    final isFavorite = favoriteModel.isFavorite(widget.book);
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    final isDarkMode = themeNotifier.isDark;
-
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => BookDetailScreen(book: widget.book)),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Stack(
-            children: [
-              Image.network(
-                widget.book.imageUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                errorBuilder: (c, e, s) =>
-                    const Center(child: Icon(Icons.book, size: 50)),
-              ),
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
-                      stops: const [0.5, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: FavoriteButton(
-                  isFavorite: isFavorite,
-                  iconSize: 30,
-                  valueChanged: (fav) {
-                    if (fav) {
-                      favoriteModel.addFavorite(widget.book);
-                      _animationControllerStar
-                          .forward()
-                          .then((_) => _animationControllerStar.reverse());
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content:
-                              Text('${widget.book.title} added to favorites!')));
-                    } else {
-                      favoriteModel.removeFavorite(widget.book);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content:
-                              Text('${widget.book.title} removed from favorites!')));
-                    }
-                  },
-                ),
-              ),
-              Positioned(
-                bottom: 10,
-                left: 10,
-                right: 10,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.book.title,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 4),
-                    Text(widget.book.author,
-                        style:
-                            const TextStyle(color: Colors.white70, fontSize: 14)),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(widget.book.getDisplayPrice(),
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color:
-                                    isDarkMode ? Colors.grey.shade800 : Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: IconButton(
-                                icon: Icon(Icons.shopping_cart,
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.blueAccent),
-                                onPressed: _onAddToCart,
-                              ),
-                            ),
-                            AnimatedBuilder(
-                              animation: _lottieController,
-                              builder: (context, child) {
-                                return _isLottieVisible
-                                    ? Lottie.asset(
-                                        'assets/animations/cart_animation.json',
-                                        width: 50,
-                                        height: 50,
-                                        controller: _lottieController,
-                                        repeat: false,
-                                      )
-                                    : const SizedBox.shrink();
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

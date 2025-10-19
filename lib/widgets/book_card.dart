@@ -6,6 +6,7 @@ import '../models/cart_model.dart';
 import '../models/favorite_model.dart';
 import '../screens/book_detail_screen.dart';
 import 'package:lottie/lottie.dart';
+import '../main.dart';
 
 class BookCard extends StatefulWidget {
   final Book book;
@@ -33,7 +34,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
 
     _lottieController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 2000),
     );
     _lottieController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -61,11 +62,11 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
     );
   }
 
-  // ✅ Tambahan kecil untuk label kategori
-  Widget _buildTypeLabel(String type) {
+  // Label Tipe (Premium)
+  Widget _buildTypeLabel(Book book) {
     Color color;
     String text;
-    switch (type.toLowerCase()) {
+    switch (book.type.toLowerCase()) {
       case 'premium':
         color = Colors.amber.shade700;
         text = 'Premium';
@@ -81,6 +82,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
+        // ignore: deprecated_member_use
         color: color.withOpacity(0.9),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -95,10 +97,69 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
     );
   }
 
+  // Label Diskon
+  Widget _buildDiscountLabel(int discountPercentage) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.redAccent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        '-$discountPercentage%',
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriceDisplay() {
+    final book = widget.book;
+
+    if (book.isDiscounted) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            book.getDisplayOriginalPrice() ?? '',
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+              decoration: TextDecoration.lineThrough,
+              decorationColor: Colors.white70,
+            ),
+          ),
+          Text(
+            book.getDisplayPrice(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Text(
+        book.getDisplayPrice(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final favoriteModel = Provider.of<FavoriteModel>(context);
     final isFavorite = favoriteModel.isFavorite(widget.book);
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final isDarkMode = themeNotifier.isDark;
 
     return Card(
       elevation: 4,
@@ -137,14 +198,13 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-
-              // ✅ Label kategori (Premium / Sale)
               Positioned(
                 top: 8,
                 left: 8,
-                child: _buildTypeLabel(widget.book.type),
+                child: widget.book.isDiscounted
+                    ? _buildDiscountLabel(widget.book.discountPercentage ?? 0)
+                    : _buildTypeLabel(widget.book),
               ),
-
               Positioned(
                 top: 8,
                 right: 8,
@@ -199,25 +259,24 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          widget.book.getDisplayPrice(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        _buildPriceDisplay(),
                         Stack(
                           alignment: Alignment.center,
                           children: [
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: isDarkMode
+                                    ? Colors.grey.shade800
+                                    : Colors.white,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: IconButton(
-                                icon: const Icon(Icons.shopping_cart,
-                                    color: Colors.blueAccent),
+                                icon: Icon(Icons.shopping_cart,
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.blueAccent),
                                 onPressed: _onAddToCart,
                               ),
                             ),
@@ -230,10 +289,6 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                                         width: 50,
                                         height: 50,
                                         controller: _lottieController,
-                                        onLoaded: (composition) {
-                                          _lottieController.duration =
-                                              composition.duration;
-                                        },
                                         repeat: false,
                                       )
                                     : const SizedBox.shrink();

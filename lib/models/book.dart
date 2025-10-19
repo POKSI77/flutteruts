@@ -1,4 +1,5 @@
 // lib/models/book.dart
+import 'dart:math';
 
 class Book {
   final String id;
@@ -10,6 +11,10 @@ class Book {
   final String type;
   int quantity;
 
+  final int? discountPercentage;
+
+  final double? bonusPrice;
+
   Book({
     required this.id,
     required this.title,
@@ -19,15 +24,15 @@ class Book {
     required this.description,
     this.type = 'regular',
     this.quantity = 1,
+    this.discountPercentage,
+    this.bonusPrice,
   }) {
-    // Validasi quantity minimal 1
     if (quantity < 1) quantity = 1;
   }
 
-  /// Factory constructor untuk parsing dari JSON
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
-      id: json['id'] ?? '',
+      id: (json['id'] ?? '').toString(),
       title: json['title'] ?? '',
       author: json['author'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
@@ -37,13 +42,11 @@ class Book {
       quantity: (json['quantity'] ?? 1) is int
           ? (json['quantity'] as int)
           : (json['quantity'] as num).toInt(),
+      discountPercentage: (json['discountPercentage'] as num?)?.toInt(),
+      bonusPrice: (json['bonusPrice'] as num?)?.toDouble(),
     );
   }
 
-  /// Optional: static compatibility method (jika ada file lama yang pakai)
-  static Book fromJsonStatic(Map<String, dynamic> json) => Book.fromJson(json);
-
-  /// Convert Book ke JSON (untuk SharedPreferences)
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -54,10 +57,11 @@ class Book {
       'description': description,
       'type': type,
       'quantity': quantity,
+      'discountPercentage': discountPercentage,
+      'bonusPrice': bonusPrice,
     };
   }
 
-  /// Copy method (buat update sebagian field tanpa bikin baru manual)
   Book copyWith({
     String? id,
     String? title,
@@ -66,6 +70,8 @@ class Book {
     String? imageUrl,
     String? description,
     int? quantity,
+    int? discountPercentage,
+    double? bonusPrice,
   }) {
     return Book(
       id: id ?? this.id,
@@ -74,26 +80,42 @@ class Book {
       price: price ?? this.price,
       imageUrl: imageUrl ?? this.imageUrl,
       description: description ?? this.description,
-      quantity: (quantity ?? this.quantity) < 1 ? 1 : (quantity ?? this.quantity),
+      quantity:
+          (quantity ?? this.quantity) < 1 ? 1 : (quantity ?? this.quantity),
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      bonusPrice: bonusPrice ?? this.bonusPrice,
     );
   }
 
-  /// Setter quantity (dipakai CartModel)
   void setQuantity(int newQuantity) {
     quantity = newQuantity < 1 ? 1 : newQuantity;
   }
 
-  /// Untuk menampilkan harga sebagai String (dipanggil di UI)
-  String getDisplayPrice() {
-    return 'Rp ${price.toStringAsFixed(0)}';
-  }
+  bool get isDiscounted =>
+      discountPercentage != null && discountPercentage! > 0;
 
-  /// Untuk perhitungan numerik (total harga)
   double getDisplayPriceValue() {
-    return price;
+    double finalPrice = price;
+    if (isDiscounted) {
+      finalPrice = price * (1 - (discountPercentage! / 100.0));
+    } else if (type.toLowerCase() == 'premium' && bonusPrice != null) {
+      finalPrice += bonusPrice!;
+    }
+    return (finalPrice / 100).round() * 100;
   }
 
-  /// Override equals & hashCode supaya Book bisa dibandingkan dengan id
+  String getDisplayPrice() {
+    double finalPrice = getDisplayPriceValue();
+    return 'Rp ${finalPrice.toStringAsFixed(0)}';
+  }
+
+  String? getDisplayOriginalPrice() {
+    if (isDiscounted) {
+      return 'Rp ${price.toStringAsFixed(0)}';
+    }
+    return null;
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

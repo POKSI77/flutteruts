@@ -1,5 +1,3 @@
-// lib/models/special_book_model.dart
-
 import 'package:flutter/foundation.dart';
 import 'book.dart';
 

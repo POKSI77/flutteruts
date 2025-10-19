@@ -1,6 +1,5 @@
-// lib/screens/splash_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import 'package:shimmer/shimmer.dart';
 import '../services/auth_service.dart';
@@ -36,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen>
     _checkLoginStatus();
   }
 
- Future<void> _checkLoginStatus() async {
+  Future<void> _checkLoginStatus() async {
     await Future.delayed(const Duration(seconds: 4));
 
     final isLoggedIn = await _authService.isLoggedIn();
@@ -48,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen>
       final favoriteModel = Provider.of<FavoriteModel>(context, listen: false);
       final cartModel = Provider.of<CartModel>(context, listen: false);
 
-      await favoriteModel.setUser(userEmail); // ✅ Menambahkan await
+      await favoriteModel.setUser(userEmail);
       cartModel.setUserKey(userEmail);
 
       Navigator.of(context).pushReplacement(PageRouteBuilder(
@@ -59,10 +58,12 @@ class _SplashScreenState extends State<SplashScreen>
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, 0.2);
           const end = Offset.zero;
-          final curve = Curves.easeOutCubic;
+          const curve = Curves.easeOutCubic;
 
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var fadeTween =
+              Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
           return FadeTransition(
             opacity: animation.drive(fadeTween),
@@ -84,8 +85,10 @@ class _SplashScreenState extends State<SplashScreen>
           const end = Offset.zero;
           const curve = Curves.easeOutCubic;
 
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var fadeTween = Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          var fadeTween =
+              Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
 
           return FadeTransition(
             opacity: animation.drive(fadeTween),
@@ -130,7 +133,8 @@ class _SplashScreenState extends State<SplashScreen>
             opacity: fade,
             child: Text(
               _title[index],
-              style: const TextStyle(
+              style: TextStyle(
+                fontFamily: GoogleFonts.braahOne().fontFamily,
                 fontSize: 30,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -155,7 +159,6 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ✨ Shimmer dengan opasitas lembut agar logo tetap terlihat
                     Stack(
                       alignment: Alignment.center,
                       children: [
@@ -170,8 +173,10 @@ class _SplashScreenState extends State<SplashScreen>
                           child: IgnorePointer(
                             child: Shimmer.fromColors(
                               baseColor: Colors.transparent,
+                              // ignore: deprecated_member_use
                               highlightColor: Colors.white.withOpacity(0.4),
                               child: Container(
+                                // ignore: deprecated_member_use
                                 color: Colors.white.withOpacity(0.2),
                               ),
                             ),
@@ -180,8 +185,6 @@ class _SplashScreenState extends State<SplashScreen>
                       ],
                     ),
                     const SizedBox(height: 20),
-
-                    // ✨ Shimmer hanya di teks (lebih cocok)
                     Shimmer.fromColors(
                       baseColor: Colors.black,
                       highlightColor: Colors.blueGrey.shade200,

@@ -1,5 +1,3 @@
-// lib/screens/cart_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -39,7 +37,8 @@ class CartScreen extends StatelessWidget {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         title: const Text("Clear Cart"),
-                        content: const Text("Are you sure you want to remove all items?"),
+                        content: const Text(
+                            "Are you sure you want to remove all items?"),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
@@ -86,7 +85,8 @@ class CartScreen extends StatelessWidget {
                     },
                   ),
                 ),
-                CartSummary(totalPrice: currencyFormatter.format(cart.totalPrice)),
+                CartSummary(
+                    totalPrice: currencyFormatter.format(cart.totalPrice)),
               ],
             );
           }
@@ -107,9 +107,11 @@ class EmptyCartView extends StatelessWidget {
         children: [
           Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey),
           SizedBox(height: 20),
-          Text("Your cart is empty", style: TextStyle(fontSize: 20, color: Colors.grey)),
+          Text("Your cart is empty",
+              style: TextStyle(fontSize: 20, color: Colors.grey)),
           SizedBox(height: 10),
-          Text("Add some books to get started!", style: TextStyle(fontSize: 16, color: Colors.grey)),
+          Text("Add some books to get started!",
+              style: TextStyle(fontSize: 16, color: Colors.grey)),
         ],
       ),
     );
@@ -123,15 +125,14 @@ class CartItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartModel>(context, listen: false);
-    
-    // Perbaikan: Ubah variabel book menjadi item
+
     final tempBook = Book(
       id: item.id,
       title: item.title,
-      author: '', // Tidak ada author di CartItem
+      author: '',
       price: item.price,
       imageUrl: item.image,
-      description: '', // Tidak ada deskripsi di CartItem
+      description: '',
     );
 
     return Card(
@@ -153,10 +154,14 @@ class CartItemCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(item.title,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  Text('Rp ${item.price.toStringAsFixed(0)}', 
-                      style: const TextStyle(color: Color(0xFF667eea), fontWeight: FontWeight.bold)),
+                  Text('Rp ${item.price.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                          color: Color(0xFF667eea),
+                          fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
                   Row(
                     children: [
@@ -164,7 +169,8 @@ class CartItemCard extends StatelessWidget {
                         icon: const Icon(Icons.remove, size: 20),
                         onPressed: () => cart.decrementQuantity(tempBook),
                       ),
-                      Text('${item.quantity}', style: const TextStyle(fontSize: 16)),
+                      Text('${item.quantity}',
+                          style: const TextStyle(fontSize: 16)),
                       IconButton(
                         icon: const Icon(Icons.add, size: 20),
                         onPressed: () => cart.addItem(tempBook),
@@ -197,17 +203,23 @@ class CartSummary extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))
+        ],
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Total:", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const Text("Total:",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               Text(totalPrice,
                   style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF667eea))),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF667eea))),
             ],
           ),
           const SizedBox(height: 15),
@@ -219,7 +231,9 @@ class CartSummary extends StatelessWidget {
                   title: const Text("Checkout"),
                   content: const Text("Proceed to payment?"),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text("Cancel")),
                     ElevatedButton(
                       onPressed: () {
                         cart.clearCart();
@@ -240,10 +254,14 @@ class CartSummary extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF667eea),
               minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text("Checkout",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
           ),
         ],
       ),
