@@ -18,7 +18,6 @@ class BookCard extends StatefulWidget {
 
 class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
   late AnimationController _animationControllerStar;
-  late Animation<double> _scaleAnimationStar;
   late AnimationController _lottieController;
 
   @override
@@ -28,13 +27,10 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
-    _scaleAnimationStar = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _animationControllerStar, curve: Curves.easeOut),
-    );
 
     _lottieController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 1000), // Durasi tetap
     );
     _lottieController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -62,8 +58,8 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
     );
   }
 
-  // Label Tipe (Premium)
   Widget _buildTypeLabel(Book book) {
+    // ... (tidak berubah)
     Color color;
     String text;
     switch (book.type.toLowerCase()) {
@@ -97,8 +93,8 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
     );
   }
 
-  // Label Diskon
   Widget _buildDiscountLabel(int discountPercentage) {
+    // ... (tidak berubah)
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -117,6 +113,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
   }
 
   Widget _buildPriceDisplay() {
+    // ... (tidak berubah)
     final book = widget.book;
 
     if (book.isDiscounted) {
@@ -191,6 +188,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
+                        // ignore: deprecated_member_use
                         Colors.black.withOpacity(0.7)
                       ],
                       stops: const [0.5, 1.0],
@@ -239,8 +237,10 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                 right: 10,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min, // Tetap gunakan ini
                   children: [
                     Text(
+                      // Judul
                       widget.book.title,
                       style: const TextStyle(
                         color: Colors.white,
@@ -250,19 +250,26 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 4), // Jarak Judul -> Penulis
                     Text(
+                      // Penulis
                       widget.book.author,
                       style:
                           const TextStyle(color: Colors.white70, fontSize: 14),
                     ),
-                    const SizedBox(height: 8),
+
+                    // ✅ HAPUS SizedBox di sini
+                    // const SizedBox(height: 4),
+
                     Row(
+                      // Baris Harga & Cart
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      // ✅ UBAH: Coba gunakan center
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _buildPriceDisplay(),
+                        _buildPriceDisplay(), // Widget Harga
                         Stack(
+                          // Tombol Cart
                           alignment: Alignment.center,
                           children: [
                             Container(
@@ -273,6 +280,11 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: IconButton(
+                                // Pengaturan compact dari sebelumnya
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                iconSize: 24,
                                 icon: Icon(Icons.shopping_cart,
                                     color: isDarkMode
                                         ? Colors.white

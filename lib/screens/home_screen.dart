@@ -8,13 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/book.dart';
 import 'cart_screen.dart';
-import 'book_detail_screen.dart';
-import '../services/auth_service.dart';
 import '../models/cart_model.dart';
 import '../models/favorite_model.dart';
-import 'package:favorite_button/favorite_button.dart';
 import 'favorite_screen.dart';
-import 'package:lottie/lottie.dart';
 import '../widgets/book_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -30,7 +26,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final AuthService _authService = AuthService();
 
   final List<Book> books = [
     Book(

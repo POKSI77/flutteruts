@@ -1,14 +1,37 @@
+import 'package:bookstore_app/models/book.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../models/book.dart';
 import '../models/cart_model.dart';
+import '../main.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    Provider.of<CartModel>(context);
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final isDarkMode = themeNotifier.isDark;
+
+    // Definisikan warna berdasarkan mode
+    final List<Color> appBarGradientColors = [
+      isDarkMode ? Colors.black : Colors.white,
+      isDarkMode
+          ? Colors.grey.shade900
+          : const Color.fromARGB(255, 159, 200, 216),
+    ];
+    final Color appBarTextColor = isDarkMode ? Colors.white : Colors.black;
+    final Color appBarIconColor = isDarkMode ? Colors.white : Colors.black;
+    final Color bodyBackgroundColor =
+        isDarkMode ? const Color(0xFF121212) : Colors.grey.shade100;
+    final Color textColor = isDarkMode ? Colors.white : Colors.black;
+    final Color subtleTextColor =
+        isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600;
+    final Color cardBackgroundColor =
+        isDarkMode ? Colors.grey.shade800 : Colors.white;
+    final Color blueColor = Colors.blue[700]!;
+
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -16,22 +39,38 @@ class CartScreen extends StatelessWidget {
     );
 
     return Scaffold(
+      backgroundColor: bodyBackgroundColor,
       appBar: AppBar(
         title: Consumer<CartModel>(
-          builder: (context, cart, _) {
+          builder: (context, cartData, _) {
             return Text(
-              'Cart (${cart.items.length})',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              'Cart (${cartData.items.length})',
+              style: TextStyle(
+                color: appBarTextColor,
+                fontWeight: FontWeight.bold,
+              ),
             );
           },
         ),
-        backgroundColor: const Color(0xFF667eea),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: appBarGradientColors,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: IconThemeData(color: appBarIconColor),
+        elevation: 4,
         actions: [
           Consumer<CartModel>(
-            builder: (context, cart, _) {
-              if (cart.items.isNotEmpty) {
+            builder: (context, cartData, _) {
+              if (cartData.items.isNotEmpty) {
                 return IconButton(
-                  icon: const Icon(Icons.delete_sweep),
+                  icon: Icon(Icons.delete_sweep, color: appBarIconColor),
+                  tooltip: 'Clear Cart',
                   onPressed: () {
                     showDialog(
                       context: context,
@@ -45,8 +84,10 @@ class CartScreen extends StatelessWidget {
                             child: const Text("Cancel"),
                           ),
                           ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent),
                             onPressed: () {
-                              cart.clearCart();
+                              cartData.clearCart();
                               Navigator.pop(ctx);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -69,24 +110,35 @@ class CartScreen extends StatelessWidget {
         ],
       ),
       body: Consumer<CartModel>(
-        builder: (context, cart, _) {
-          if (cart.items.isEmpty) {
-            return const EmptyCartView();
+        builder: (context, cartData, _) {
+          if (cartData.items.isEmpty) {
+            return EmptyCartView(textColor: subtleTextColor);
           } else {
             return Column(
               children: [
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(15),
-                    itemCount: cart.items.length,
+                    padding: const EdgeInsets.all(10),
+                    itemCount: cartData.items.length,
                     itemBuilder: (context, index) {
-                      final item = cart.items[index];
-                      return CartItemCard(item: item);
+                      final item = cartData.items[index];
+                      return CartItemCard(
+                        item: item,
+                        currencyFormatter: currencyFormatter,
+                        cardColor: cardBackgroundColor,
+                        textColor: textColor,
+                        subtleTextColor: subtleTextColor,
+                        blueColor: blueColor,
+                      );
                     },
                   ),
                 ),
                 CartSummary(
-                    totalPrice: currencyFormatter.format(cart.totalPrice)),
+                  totalPrice: currencyFormatter.format(cartData.totalPrice),
+                  backgroundColor: cardBackgroundColor,
+                  textColor: textColor,
+                  blueColor: blueColor,
+                ),
               ],
             );
           }
@@ -97,30 +149,51 @@ class CartScreen extends StatelessWidget {
 }
 
 class EmptyCartView extends StatelessWidget {
-  const EmptyCartView({super.key});
+  final Color textColor; // Terima warna dari parent
+  const EmptyCartView({super.key, required this.textColor});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey),
-          SizedBox(height: 20),
-          Text("Your cart is empty",
-              style: TextStyle(fontSize: 20, color: Colors.grey)),
-          SizedBox(height: 10),
-          Text("Add some books to get started!",
-              style: TextStyle(fontSize: 16, color: Colors.grey)),
+          Icon(Icons.shopping_cart_outlined, size: 100, color: textColor),
+          const SizedBox(height: 20),
+          Text(
+            "Your cart is empty",
+            style: TextStyle(fontSize: 20, color: textColor),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "Add some books to get started!",
+            // ignore: deprecated_member_use
+            style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.7)),
+          ),
         ],
       ),
     );
   }
 }
 
+// Widget untuk Setiap Item dalam Cart
 class CartItemCard extends StatelessWidget {
   final CartItem item;
-  const CartItemCard({super.key, required this.item});
+  final NumberFormat currencyFormatter;
+  final Color cardColor;
+  final Color textColor;
+  final Color subtleTextColor;
+  final Color blueColor;
+
+  const CartItemCard({
+    super.key,
+    required this.item,
+    required this.currencyFormatter,
+    required this.cardColor,
+    required this.textColor,
+    required this.subtleTextColor,
+    required this.blueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -136,44 +209,89 @@ class CartItemCard extends StatelessWidget {
     );
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 15),
+      color: cardColor,
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Row(
           children: [
-            Image.network(
-              item.image,
-              width: 80,
-              height: 120,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.book, size: 80, color: Colors.grey),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.network(
+                item.image,
+                width: 70,
+                height: 100,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                    width: 70,
+                    height: 100,
+                    color: Colors.grey.shade300,
+                    child: Icon(Icons.book,
+                        size: 40, color: Colors.grey.shade700)),
+              ),
             ),
             const SizedBox(width: 15),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.title,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Text('Rp ${item.price.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                          color: Color(0xFF667eea),
-                          fontWeight: FontWeight.bold)),
+                  Text(
+                    item.title,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textColor),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 5),
+                  Text(
+                    currencyFormatter.format(item.price),
+                    style: TextStyle(
+                        color: blueColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.remove, size: 20),
-                        onPressed: () => cart.decrementQuantity(tempBook),
+                      InkWell(
+                        onTap: () => cart.decrementQuantity(tempBook),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                              // ignore: deprecated_member_use
+                              border: Border.all(
+                                  color: Colors.redAccent.withOpacity(0.5)),
+                              borderRadius: BorderRadius.circular(4)),
+                          child: const Icon(Icons.remove,
+                              size: 18, color: Colors.redAccent),
+                        ),
                       ),
-                      Text('${item.quantity}',
-                          style: const TextStyle(fontSize: 16)),
-                      IconButton(
-                        icon: const Icon(Icons.add, size: 20),
-                        onPressed: () => cart.addItem(tempBook),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          '${item.quantity}',
+                          style: TextStyle(
+                              fontSize: 16,
+                              color: textColor,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => cart.addItem(tempBook),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                              // ignore: deprecated_member_use
+                              border: Border.all(
+                                  color: Colors.green.withOpacity(0.5)),
+                              borderRadius: BorderRadius.circular(4)),
+                          child: const Icon(Icons.add,
+                              size: 18, color: Colors.green),
+                        ),
                       ),
                     ],
                   ),
@@ -181,9 +299,16 @@ class CartItemCard extends StatelessWidget {
               ),
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () => cart.removeItem(tempBook),
-            ),
+                // ignore: deprecated_member_use
+                icon: Icon(Icons.delete_outline,
+                    color: Colors.redAccent.withOpacity(0.8)),
+                tooltip: 'Remove item',
+                onPressed: () {
+                  cart.removeItem(tempBook);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${item.title} removed from cart.')),
+                  );
+                }),
           ],
         ),
       ),
@@ -193,33 +318,60 @@ class CartItemCard extends StatelessWidget {
 
 class CartSummary extends StatelessWidget {
   final String totalPrice;
-  const CartSummary({super.key, required this.totalPrice});
+  final Color backgroundColor;
+  final Color textColor;
+  final Color blueColor;
+
+  const CartSummary({
+    super.key,
+    required this.totalPrice,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.blueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartModel>(context, listen: false);
 
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 25),
+      decoration: BoxDecoration(
+        color: backgroundColor,
         boxShadow: [
           BoxShadow(
-              color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))
+              // ignore: deprecated_member_use
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -5))
         ],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Total:",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              Text(totalPrice,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF667eea))),
+              Text(
+                "Total:",
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: textColor),
+              ),
+              Text(
+                totalPrice,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: blueColor,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 15),
@@ -229,12 +381,14 @@ class CartSummary extends StatelessWidget {
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: const Text("Checkout"),
-                  content: const Text("Proceed to payment?"),
+                  content: Text("Proceed to payment for $totalPrice?"),
                   actions: [
                     TextButton(
                         onPressed: () => Navigator.pop(ctx),
                         child: const Text("Cancel")),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green),
                       onPressed: () {
                         cart.clearCart();
                         Navigator.pop(ctx);
@@ -252,16 +406,14 @@ class CartSummary extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF667eea),
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text("Checkout",
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+                backgroundColor: blueColor,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                textStyle:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: const Text("Checkout"),
           ),
         ],
       ),

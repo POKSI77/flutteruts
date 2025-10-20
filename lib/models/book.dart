@@ -1,6 +1,3 @@
-// lib/models/book.dart
-import 'dart:math';
-
 class Book {
   final String id;
   final String title;

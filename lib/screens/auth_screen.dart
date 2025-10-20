@@ -20,7 +20,6 @@ class _AuthScreenState extends State<AuthScreen>
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
   late AnimationController _animationController;
-  late Animation<double> _slideAnimation;
 
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -37,9 +36,6 @@ class _AuthScreenState extends State<AuthScreen>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
-    );
-    _slideAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _loadPreviousUser();
   }

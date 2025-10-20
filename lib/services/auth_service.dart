@@ -119,24 +119,6 @@ class AuthService {
     return prefs.getString(_currentUserKey);
   }
 
-  Future<bool> _isUserExists(String username, String email) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final users = prefs.getStringList(_usersKey) ?? [];
-
-      return users.any((user) {
-        try {
-          final userData = User.fromJson(jsonDecode(user));
-          return userData.username == username || userData.email == email;
-        } catch (e) {
-          return false;
-        }
-      });
-    } catch (e) {
-      return false;
-    }
-  }
-
   Future<bool> isUserRegistered(String email) async {
     final prefs = await SharedPreferences.getInstance();
     final users = prefs.getStringList(_usersKey) ?? [];
@@ -241,14 +223,6 @@ class AuthService {
     } catch (e) {
       throw Exception('Failed to reset password: ${e.toString()}');
     }
-  }
-
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
-  }
-
-  bool _isValidPassword(String password) {
-    return password.length >= 6;
   }
 
   Future<void> clearUsers() async {
