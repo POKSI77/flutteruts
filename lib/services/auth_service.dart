@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
-import 'package:uuid/uuid.dart';
 
 class AuthService {
   final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
@@ -11,7 +10,6 @@ class AuthService {
   static const String _usersKey = 'users';
   static const String _currentUserKey = 'currentUser';
   static const String _isLoggedInKey = 'isLoggedIn';
-  final _uuid = const Uuid();
 
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
@@ -19,13 +17,11 @@ class AuthService {
 
   Future<void> register(String username, String email, String password) async {
     try {
-      // Create user in Firebase Auth
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Store additional user data in Firestore
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'username': username,
         'email': email,
@@ -59,7 +55,6 @@ class AuthService {
 
   Future<bool> login(String usernameOrEmail, String password) async {
     try {
-      // Sign in with Firebase Auth
       final userCredential = await _auth.signInWithEmailAndPassword(
         email: usernameOrEmail,
         password: password,
@@ -72,7 +67,6 @@ class AuthService {
 
       final username = userData.data()?['username'] as String? ?? 'User';
 
-      // Save login state
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
       await prefs.setString('username', username);
@@ -116,7 +110,7 @@ class AuthService {
 
   Future<String?> getCurrentUserEmail() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_currentUserKey);
+    return prefs.getString('email');
   }
 
   Future<bool> isUserRegistered(String email) async {
@@ -153,80 +147,5 @@ class AuthService {
     }
 
     return null;
-  }
-
-  Future<String> generateResetToken(String email) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      if (!await isUserRegistered(email)) {
-        throw Exception('No account found with this email');
-      }
-
-      final resetToken = _uuid.v4();
-      await prefs.setString(
-        'reset_token_$email',
-        jsonEncode({
-          'token': resetToken,
-          'expires':
-              DateTime.now().add(const Duration(hours: 1)).toIso8601String(),
-        }),
-      );
-
-      return resetToken;
-    } catch (e) {
-      throw Exception('Failed to generate reset token: ${e.toString()}');
-    }
-  }
-
-  Future<void> resetPassword(
-      String email, String token, String newPassword) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      final storedTokenJson = prefs.getString('reset_token_$email');
-      if (storedTokenJson == null) {
-        throw Exception('Invalid or expired reset token');
-      }
-
-      final tokenData = jsonDecode(storedTokenJson);
-      final storedToken = tokenData['token'];
-      final expiryDate = DateTime.parse(tokenData['expires']);
-
-      if (token != storedToken || DateTime.now().isAfter(expiryDate)) {
-        throw Exception('Invalid or expired reset token');
-      }
-
-      // Update password
-      final users = prefs.getStringList(_usersKey) ?? [];
-      final userIndex = users.indexWhere((user) {
-        final userData = User.fromJson(jsonDecode(user));
-        return userData.email == email;
-      });
-
-      if (userIndex == -1) {
-        throw Exception('User not found');
-      }
-
-      final userData = User.fromJson(jsonDecode(users[userIndex]));
-      final updatedUser = User(
-        email: userData.email,
-        password: newPassword,
-        username: userData.username,
-      );
-
-      users[userIndex] = jsonEncode(updatedUser.toJson());
-      await prefs.setStringList(_usersKey, users);
-
-      // Clean up reset token
-      await prefs.remove('reset_token_$email');
-    } catch (e) {
-      throw Exception('Failed to reset password: ${e.toString()}');
-    }
-  }
-
-  Future<void> clearUsers() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_usersKey);
   }
 }

@@ -5,7 +5,6 @@ import '../services/auth_service.dart';
 import '../models/favorite_model.dart';
 import '../models/cart_model.dart';
 import 'home_screen.dart';
-import 'forgot_password_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -253,25 +252,6 @@ class _AuthScreenState extends State<AuthScreen>
                           validator: (v) =>
                               v == null || v.isEmpty ? 'Enter password' : null,
                         ),
-                        if (isLogin)
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        const ForgotPasswordScreen(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                "Forgot Password?",
-                                style: TextStyle(color: Colors.blue[700]),
-                              ),
-                            ),
-                          ),
                         if (!isLogin) ...[
                           const SizedBox(height: 16),
                           TextFormField(

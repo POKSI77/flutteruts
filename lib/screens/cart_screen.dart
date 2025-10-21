@@ -14,7 +14,6 @@ class CartScreen extends StatelessWidget {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isDarkMode = themeNotifier.isDark;
 
-    // Definisikan warna berdasarkan mode
     final List<Color> appBarGradientColors = [
       isDarkMode ? Colors.black : Colors.white,
       isDarkMode
@@ -149,7 +148,7 @@ class CartScreen extends StatelessWidget {
 }
 
 class EmptyCartView extends StatelessWidget {
-  final Color textColor; // Terima warna dari parent
+  final Color textColor;
   const EmptyCartView({super.key, required this.textColor});
 
   @override
@@ -176,7 +175,6 @@ class EmptyCartView extends StatelessWidget {
   }
 }
 
-// Widget untuk Setiap Item dalam Cart
 class CartItemCard extends StatelessWidget {
   final CartItem item;
   final NumberFormat currencyFormatter;
@@ -264,6 +262,7 @@ class CartItemCard extends StatelessWidget {
                           decoration: BoxDecoration(
                               // ignore: deprecated_member_use
                               border: Border.all(
+                                  // ignore: deprecated_member_use
                                   color: Colors.redAccent.withOpacity(0.5)),
                               borderRadius: BorderRadius.circular(4)),
                           child: const Icon(Icons.remove,
@@ -287,6 +286,7 @@ class CartItemCard extends StatelessWidget {
                           decoration: BoxDecoration(
                               // ignore: deprecated_member_use
                               border: Border.all(
+                                  // ignore: deprecated_member_use
                                   color: Colors.green.withOpacity(0.5)),
                               borderRadius: BorderRadius.circular(4)),
                           child: const Icon(Icons.add,
@@ -301,6 +301,7 @@ class CartItemCard extends StatelessWidget {
             IconButton(
                 // ignore: deprecated_member_use
                 icon: Icon(Icons.delete_outline,
+                    // ignore: deprecated_member_use
                     color: Colors.redAccent.withOpacity(0.8)),
                 tooltip: 'Remove item',
                 onPressed: () {

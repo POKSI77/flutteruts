@@ -30,7 +30,7 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
 
     _lottieController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000), // Durasi tetap
+      duration: const Duration(milliseconds: 1000),
     );
     _lottieController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -59,7 +59,6 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
   }
 
   Widget _buildTypeLabel(Book book) {
-    // ... (tidak berubah)
     Color color;
     String text;
     switch (book.type.toLowerCase()) {
@@ -153,8 +152,6 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final favoriteModel = Provider.of<FavoriteModel>(context);
-    final isFavorite = favoriteModel.isFavorite(widget.book);
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isDarkMode = themeNotifier.isDark;
 
@@ -206,28 +203,33 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
               Positioned(
                 top: 8,
                 right: 8,
-                child: FavoriteButton(
-                  isFavorite: isFavorite,
-                  iconSize: 30,
-                  valueChanged: (fav) {
-                    if (fav) {
-                      favoriteModel.addFavorite(widget.book);
-                      _animationControllerStar
-                          .forward()
-                          .then((_) => _animationControllerStar.reverse());
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(
-                                '${widget.book.title} added to favorites!')),
-                      );
-                    } else {
-                      favoriteModel.removeFavorite(widget.book);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(
-                                '${widget.book.title} removed from favorites!')),
-                      );
-                    }
+                child: Consumer<FavoriteModel>(
+                  builder: (context, favoriteModel, child) {
+                    final isFavorite = favoriteModel.isFavorite(widget.book);
+                    return FavoriteButton(
+                      isFavorite: isFavorite,
+                      iconSize: 30,
+                      valueChanged: (fav) {
+                        if (fav) {
+                          favoriteModel.addFavorite(widget.book);
+                          _animationControllerStar
+                              .forward()
+                              .then((_) => _animationControllerStar.reverse());
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    '${widget.book.title} added to favorites!')),
+                          );
+                        } else {
+                          favoriteModel.removeFavorite(widget.book);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    '${widget.book.title} removed from favorites!')),
+                          );
+                        }
+                      },
+                    );
                   },
                 ),
               ),
@@ -237,10 +239,9 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                 right: 10,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min, // Tetap gunakan ini
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      // Judul
                       widget.book.title,
                       style: const TextStyle(
                         color: Colors.white,
@@ -250,26 +251,18 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4), // Jarak Judul -> Penulis
+                    const SizedBox(height: 4),
                     Text(
-                      // Penulis
                       widget.book.author,
                       style:
                           const TextStyle(color: Colors.white70, fontSize: 14),
                     ),
-
-                    // ✅ HAPUS SizedBox di sini
-                    // const SizedBox(height: 4),
-
                     Row(
-                      // Baris Harga & Cart
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      // ✅ UBAH: Coba gunakan center
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _buildPriceDisplay(), // Widget Harga
+                        _buildPriceDisplay(),
                         Stack(
-                          // Tombol Cart
                           alignment: Alignment.center,
                           children: [
                             Container(
@@ -280,7 +273,6 @@ class _BookCardState extends State<BookCard> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: IconButton(
-                                // Pengaturan compact dari sebelumnya
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),

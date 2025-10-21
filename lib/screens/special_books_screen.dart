@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/special_book_model.dart';
-import 'book_detail_screen.dart'; 
+import 'book_detail_screen.dart';
 
 class SpecialBooksScreen extends StatelessWidget {
   const SpecialBooksScreen({Key? key}) : super(key: key);
@@ -45,14 +45,15 @@ class SpecialBooksScreen extends StatelessWidget {
                     book.title,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(book.getDisplayPrice()), // Menggunakan getDisplayPrice
+                  subtitle: Text(book.getDisplayPrice()),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () {
                       specialBookModel.removeItem(book);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${book.title} removed from special books.'),
+                          content:
+                              Text('${book.title} removed from special books.'),
                           duration: const Duration(seconds: 1),
                         ),
                       );

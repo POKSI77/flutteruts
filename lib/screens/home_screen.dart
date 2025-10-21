@@ -26,7 +26,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   final List<Book> books = [
     Book(
       id: '1',
@@ -241,6 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isDarkMode = themeNotifier.isDark;
+    final favoriteModel = Provider.of<FavoriteModel>(context);
 
     final List<Color> appBarGradientColors = [
       isDarkMode ? Colors.black : Colors.white,
@@ -251,10 +251,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final Color appBarIconColor = isDarkMode ? Colors.white : Colors.black;
     final Color appBarTextColor = isDarkMode ? Colors.white : Colors.black;
-    final Color bodyBackgroundColor =
-        isDarkMode ? Colors.black87 : Colors.white;
+    final Color bodyBackgroundColor = isDarkMode ? Colors.black : Colors.white;
 
     return Scaffold(
+      backgroundColor: bodyBackgroundColor,
       appBar: AppBar(
         title: Text(
           'PokBook',
@@ -376,6 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.person),
+            color: appBarIconColor,
             onPressed: () {
               Navigator.push(
                 context,
@@ -388,66 +389,79 @@ class _HomeScreenState extends State<HomeScreen> {
       body: AnimatedContainer(
         duration: const Duration(milliseconds: 500),
         color: bodyBackgroundColor,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  _welcomeMessage ?? 'Loading...',
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        fontWeight: FontWeight.bold,
+        child: ScrollConfiguration(
+          behavior: NoGlowBehavior(),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    _welcomeMessage ?? 'Loading...',
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ).animate().slide(
+                        begin: const Offset(-1, 0),
+                        end: Offset.zero,
+                        duration: 500.ms,
+                        curve: Curves.easeOut,
                       ),
-                ).animate().slide(
-                      begin: const Offset(-1, 0),
-                      end: Offset.zero,
-                      duration: 500.ms,
-                      curve: Curves.easeOut,
-                    ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: TextField(
-                  onChanged: (v) => setState(() => _searchQuery = v),
-                  decoration: InputDecoration(
-                    hintText: 'Cari judul atau penulis...',
-                    prefixIcon: Icon(Icons.search,
-                        color: isDarkMode ? Colors.white70 : Colors.black54),
-                    hintStyle: TextStyle(
-                        color: isDarkMode ? Colors.white70 : Colors.black54),
-                    filled: true,
-                    fillColor: isDarkMode
-                        // ignore: deprecated_member_use
-                        ? Colors.white.withOpacity(0.1)
-                        // ignore: deprecated_member_use
-                        : Colors.grey.withOpacity(0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black),
                 ),
-              ),
-              if (_searchQuery.trim().isNotEmpty)
-                _buildBookSection('Hasil Pencarian', _filteredBooks, isDarkMode)
-              else ...[
-                _buildBookSection('Reguler', _regularBooks, isDarkMode),
-                _buildBookSection('Premium', _premiumBooks, isDarkMode),
-                _buildBookSection('Diskon', _saleBooks, isDarkMode),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: TextField(
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                    decoration: InputDecoration(
+                      hintText: 'Cari judul atau penulis...',
+                      prefixIcon: Icon(Icons.search,
+                          color: isDarkMode ? Colors.white70 : Colors.black54),
+                      hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.white70 : Colors.black54),
+                      filled: true,
+                      fillColor: isDarkMode
+                          // ignore: deprecated_member_use
+                          ? Colors.white.withOpacity(0.1)
+                          // ignore: deprecated_member_use
+                          : Colors.grey.withOpacity(0.1),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black),
+                  ),
+                ),
+
+                // Logika pencarian/tampilan buku
+                if (_searchQuery.trim().isNotEmpty)
+                  if (_filteredBooks.isEmpty)
+                    _buildNotFoundWidget(context, isDarkMode)
+                  else
+                    _buildBookSection('Hasil Pencarian', _filteredBooks,
+                        isDarkMode, favoriteModel)
+                else ...[
+                  _buildBookSection(
+                      'Reguler', _regularBooks, isDarkMode, favoriteModel),
+                  _buildBookSection(
+                      'Premium', _premiumBooks, isDarkMode, favoriteModel),
+                  _buildBookSection(
+                      'Diskon', _saleBooks, isDarkMode, favoriteModel),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBookSection(String title, List<Book> books, bool isDarkMode) {
+  Widget _buildBookSection(String title, List<Book> books, bool isDarkMode,
+      FavoriteModel favoriteModel) {
     if (books.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -471,11 +485,18 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             itemCount: books.length,
             itemBuilder: (context, index) {
+              final book = books[index];
+              final isFavorite = favoriteModel.isFavorite(book);
+              final dynamicKey = ValueKey('${book.id}_$isFavorite');
+
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: SizedBox(
                   width: 220,
-                  child: BookCard(book: books[index]),
+                  child: BookCard(
+                    key: dynamicKey,
+                    book: book,
+                  ),
                 ),
               );
             },
@@ -483,5 +504,49 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildNotFoundWidget(BuildContext context, bool isDarkMode) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 64.0, horizontal: 32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 100,
+              color: isDarkMode ? Colors.white38 : Colors.grey.shade400,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Novel Tidak Ditemukan',
+              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Kami tidak bisa menemukan judul atau penulis yang cocok dengan pencarian Anda. Silakan coba kata kunci lain.',
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                    color: isDarkMode ? Colors.white70 : Colors.black54,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// HELPER CLASS
+class NoGlowBehavior extends ScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return child;
   }
 }
