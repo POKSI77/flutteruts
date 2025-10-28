@@ -5,15 +5,24 @@ import 'package:intl/intl.dart';
 import '../models/cart_model.dart';
 import '../main.dart';
 
+// --- IMPORT BARU YANG DIBUTUHKAN ---
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+// ---------------------------------
+
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<CartModel>(context);
+    // Ambil data tema
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isDarkMode = themeNotifier.isDark;
 
+    // Ambil UID pengguna
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    // Definisikan warna-warna (kode Anda sebelumnya)
     final List<Color> appBarGradientColors = [
       isDarkMode ? Colors.black : Colors.white,
       isDarkMode
@@ -37,19 +46,109 @@ class CartScreen extends StatelessWidget {
       decimalDigits: 0,
     );
 
+    // --- STREAMBUILDER DIMULAI DI SINI ---
+    return StreamBuilder<QuerySnapshot>(
+      // 1. Tentukan Stream-nya: dengarkan koleksi 'cart' milik pengguna
+      stream: (userId != null)
+          ? FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('cart')
+              .snapshots()
+          : null, // Jika tidak ada user, stream-nya null
+
+      // 2. Builder yang akan membangun UI berdasarkan data stream
+      builder: (context, snapshot) {
+        
+        // --- Handle Status Loading, Error, atau User Logout ---
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+              backgroundColor: bodyBackgroundColor,
+              appBar: AppBar(title: const Text('Cart (Loading...)')),
+              body: const Center(child: CircularProgressIndicator()));
+        }
+
+        if (snapshot.hasError) {
+          return Scaffold(
+              backgroundColor: bodyBackgroundColor,
+              appBar: AppBar(title: const Text('Cart (Error)')),
+              body: Center(child: Text('Error: ${snapshot.error}')));
+        }
+        
+        if (!snapshot.hasData || userId == null) {
+          // Tampilkan keranjang kosong jika user logout atau tidak ada data
+          return _buildEmptyScaffold(
+              context,
+              currencyFormatter,
+              0, // total items
+              '0', // total price
+              appBarTextColor,
+              appBarGradientColors,
+              appBarIconColor,
+              bodyBackgroundColor,
+              subtleTextColor,
+              cardBackgroundColor,
+              textColor,
+              blueColor,
+              true); // isEmpty = true
+        }
+
+        // --- 3. SUKSES: Data diterima ---
+        // Ubah dokumen Firestore menjadi List<CartItem>
+        final List<CartItem> cartItems = snapshot.data!.docs.map((doc) {
+          return CartItem.fromJson(doc.data() as Map<String, dynamic>);
+        }).toList();
+
+        // Hitung total harga
+        final double totalPrice = cartItems.fold(
+            0, (sum, item) => sum + (item.price * item.quantity));
+
+        // --- 4. Kembalikan Scaffold dengan data yang ada ---
+        return _buildEmptyScaffold(
+            context,
+            currencyFormatter,
+            cartItems.length, // total items
+            currencyFormatter.format(totalPrice), // total price
+            appBarTextColor,
+            appBarGradientColors,
+            appBarIconColor,
+            bodyBackgroundColor,
+            subtleTextColor,
+            cardBackgroundColor,
+            textColor,
+            blueColor,
+            cartItems.isEmpty, // isEmpty
+            cartItems); // Berikan daftar item
+      },
+    );
+  }
+
+  // Widget helper baru untuk membangun Scaffold (agar tidak duplikat kode)
+  Widget _buildEmptyScaffold(
+    BuildContext context,
+    NumberFormat currencyFormatter,
+    int itemCount,
+    String totalPriceString,
+    Color appBarTextColor,
+    List<Color> appBarGradientColors,
+    Color appBarIconColor,
+    Color bodyBackgroundColor,
+    Color subtleTextColor,
+    Color cardBackgroundColor,
+    Color textColor,
+    Color blueColor,
+    bool isEmpty, [
+    List<CartItem>? cartItems, // Opsional
+  ]) {
     return Scaffold(
       backgroundColor: bodyBackgroundColor,
       appBar: AppBar(
-        title: Consumer<CartModel>(
-          builder: (context, cartData, _) {
-            return Text(
-              'Cart (${cartData.items.length})',
-              style: TextStyle(
-                color: appBarTextColor,
-                fontWeight: FontWeight.bold,
-              ),
-            );
-          },
+        title: Text(
+          'Cart ($itemCount)', // Judul dinamis
+          style: TextStyle(
+            color: appBarTextColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         flexibleSpace: Container(
@@ -64,63 +163,58 @@ class CartScreen extends StatelessWidget {
         iconTheme: IconThemeData(color: appBarIconColor),
         elevation: 4,
         actions: [
-          Consumer<CartModel>(
-            builder: (context, cartData, _) {
-              if (cartData.items.isNotEmpty) {
-                return IconButton(
-                  icon: Icon(Icons.delete_sweep, color: appBarIconColor),
-                  tooltip: 'Clear Cart',
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text("Clear Cart"),
-                        content: const Text(
-                            "Are you sure you want to remove all items?"),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: const Text("Cancel"),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent),
-                            onPressed: () {
-                              cartData.clearCart();
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Cart cleared"),
-                                  duration: Duration(seconds: 1),
-                                ),
-                              );
-                            },
-                            child: const Text("Yes, Clear"),
-                          ),
-                        ],
+          // Aksi Hapus Keranjang (hanya muncul jika tidak kosong)
+          if (!isEmpty)
+            IconButton(
+              icon: Icon(Icons.delete_sweep, color: appBarIconColor),
+              tooltip: 'Clear Cart',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text("Clear Cart"),
+                    content: const Text(
+                        "Are you sure you want to remove all items?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text("Cancel"),
                       ),
-                    );
-                  },
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent),
+                        onPressed: () {
+                          // Panggil CartModel untuk menghapus
+                          Provider.of<CartModel>(context, listen: false)
+                              .clearCart();
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Cart cleared"),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        child: const Text("Yes, Clear"),
+                      ),
+                    ],
+                  ),
                 );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
+              },
+            ),
         ],
       ),
-      body: Consumer<CartModel>(
-        builder: (context, cartData, _) {
-          if (cartData.items.isEmpty) {
-            return EmptyCartView(textColor: subtleTextColor);
-          } else {
-            return Column(
+      body: (isEmpty)
+          ? EmptyCartView(textColor: subtleTextColor) // Tampilan jika kosong
+          : Column(
+              // Tampilan jika ada isi
               children: [
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.all(10),
-                    itemCount: cartData.items.length,
+                    itemCount: cartItems!.length,
                     itemBuilder: (context, index) {
-                      final item = cartData.items[index];
+                      final item = cartItems[index];
                       return CartItemCard(
                         item: item,
                         currencyFormatter: currencyFormatter,
@@ -133,19 +227,20 @@ class CartScreen extends StatelessWidget {
                   ),
                 ),
                 CartSummary(
-                  totalPrice: currencyFormatter.format(cartData.totalPrice),
+                  totalPrice: totalPriceString, // Total harga dinamis
                   backgroundColor: cardBackgroundColor,
                   textColor: textColor,
                   blueColor: blueColor,
                 ),
               ],
-            );
-          }
-        },
-      ),
+            ),
     );
   }
 }
+
+// -------------------------------------------------------------------
+// Widget Sisanya (Tidak Berubah, hanya copy-paste dari kode Anda)
+// -------------------------------------------------------------------
 
 class EmptyCartView extends StatelessWidget {
   final Color textColor;
@@ -195,16 +290,11 @@ class CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Dapatkan CartModel untuk memanggil fungsi
     final cart = Provider.of<CartModel>(context, listen: false);
 
-    final tempBook = Book(
-      id: item.id,
-      title: item.title,
-      author: '',
-      price: item.price,
-      imageUrl: item.image,
-      description: '',
-    );
+    // Ambil data buku lengkap dari CartItem
+    final Book bookFromCart = item.bookData;
 
     return Card(
       color: cardColor,
@@ -256,7 +346,8 @@ class CartItemCard extends StatelessWidget {
                   Row(
                     children: [
                       InkWell(
-                        onTap: () => cart.decrementQuantity(tempBook),
+                        // Gunakan data buku lengkap
+                        onTap: () => cart.decrementQuantity(bookFromCart),
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -280,7 +371,8 @@ class CartItemCard extends StatelessWidget {
                         ),
                       ),
                       InkWell(
-                        onTap: () => cart.addItem(tempBook),
+                         // Gunakan data buku lengkap
+                        onTap: () => cart.addItem(bookFromCart),
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
@@ -305,7 +397,8 @@ class CartItemCard extends StatelessWidget {
                     color: Colors.redAccent.withOpacity(0.8)),
                 tooltip: 'Remove item',
                 onPressed: () {
-                  cart.removeItem(tempBook);
+                   // Gunakan data buku lengkap
+                  cart.removeItem(bookFromCart);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('${item.title} removed from cart.')),
                   );

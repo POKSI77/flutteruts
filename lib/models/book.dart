@@ -28,6 +28,7 @@ class Book {
   }
 
   factory Book.fromJson(Map<String, dynamic> json) {
+    final dynamic qtyValue = json['quantity'] ?? 1;
     return Book(
       id: (json['id'] ?? '').toString(),
       title: json['title'] ?? '',
@@ -36,9 +37,7 @@ class Book {
       imageUrl: json['imageUrl'] ?? '',
       description: json['description'] ?? '',
       type: json['type'] ?? 'regular',
-      quantity: (json['quantity'] ?? 1) is int
-          ? (json['quantity'] as int)
-          : (json['quantity'] as num).toInt(),
+      quantity: qtyValue is int ? qtyValue : (qtyValue as num).toInt(),
       discountPercentage: (json['discountPercentage'] as num?)?.toInt(),
       bonusPrice: (json['bonusPrice'] as num?)?.toDouble(),
     );

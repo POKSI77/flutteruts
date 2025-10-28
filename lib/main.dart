@@ -59,14 +59,14 @@ class PokBookApp extends StatelessWidget {
             primarySwatch: Colors.blue,
             brightness: Brightness.light,
             textTheme: GoogleFonts.poppinsTextTheme(
-              Theme.of(context).textTheme,
+              ThemeData(brightness: Brightness.light).textTheme,
             ),
           ),
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             primarySwatch: Colors.blue,
             textTheme: GoogleFonts.poppinsTextTheme(
-              Theme.of(context).textTheme,
+              ThemeData(brightness: Brightness.dark).textTheme,
             ),
           ),
           initialRoute: '/splash',
@@ -74,7 +74,7 @@ class PokBookApp extends StatelessWidget {
             '/splash': (context) => const SplashScreen(),
             '/auth': (context) => const AuthScreen(),
             '/home': (context) => const HomeScreen(),
-            '/profile': (context) => ProfileScreen(),
+            '/profile': (context) => const ProfileScreen(),
           },
         );
       },

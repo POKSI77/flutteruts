@@ -1,212 +1,211 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'dart:async';
-import 'package:shimmer/shimmer.dart';
-import '../services/auth_service.dart';
-import 'home_screen.dart';
-import 'auth_screen.dart';
-import 'package:provider/provider.dart';
-import '../models/favorite_model.dart';
-import '../models/cart_model.dart';
+  import 'package:flutter/material.dart';
+  import 'package:google_fonts/google_fonts.dart';
+  import 'dart:async';
+  import 'package:shimmer/shimmer.dart';
+  import '../services/auth_service.dart';
+  import 'home_screen.dart';
+  import 'auth_screen.dart';
+  import 'package:provider/provider.dart';
+  import '../models/favorite_model.dart';
+  import '../models/cart_model.dart';
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  class SplashScreen extends StatefulWidget {
+    const SplashScreen({super.key});
 
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  final AuthService _authService = AuthService();
-
-  late AnimationController _controller;
-  final String _title = "PokBook";
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..forward();
-
-    _checkLoginStatus();
+    @override
+    State<SplashScreen> createState() => _SplashScreenState();
   }
 
-  Future<void> _checkLoginStatus() async {
-    await Future.delayed(const Duration(seconds: 4));
+  class _SplashScreenState extends State<SplashScreen>
+      with SingleTickerProviderStateMixin {
+    final AuthService _authService = AuthService();
 
-    final isLoggedIn = await _authService.isLoggedIn();
-    final userEmail = await _authService.getCurrentUserEmail();
+    late AnimationController _controller;
+    final String _title = "PokBook";
 
-    if (!mounted) return;
+    @override
+    void initState() {
+      super.initState();
 
-    if (isLoggedIn && userEmail != null) {
-      final favoriteModel = Provider.of<FavoriteModel>(context, listen: false);
-      final cartModel = Provider.of<CartModel>(context, listen: false);
+      _controller = AnimationController(
+        vsync: this,
+        duration: const Duration(seconds: 2),
+      )..forward();
 
-      await favoriteModel.setUser(userEmail);
-      cartModel.setUserKey(userEmail);
-
-      Navigator.of(context).pushReplacement(PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 900),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return const HomeScreen();
-        },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.0, 0.2);
-          const end = Offset.zero;
-          const curve = Curves.easeOutCubic;
-
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var fadeTween =
-              Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
-
-          return FadeTransition(
-            opacity: animation.drive(fadeTween),
-            child: SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            ),
-          );
-        },
-      ));
-    } else {
-      Navigator.of(context).pushReplacement(PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 900),
-        pageBuilder: (context, animation, secondaryAnimation) {
-          return const AuthScreen();
-        },
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.0, 0.2);
-          const end = Offset.zero;
-          const curve = Curves.easeOutCubic;
-
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          var fadeTween =
-              Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
-
-          return FadeTransition(
-            opacity: animation.drive(fadeTween),
-            child: SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            ),
-          );
-        },
-      ));
+      _checkLoginStatus();
     }
-  }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+    Future<void> _checkLoginStatus() async {
+      await Future.delayed(const Duration(seconds: 4));
 
-  Widget _buildAnimatedText() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(_title.length, (index) {
-        final animation = Tween<Offset>(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(
+      final isLoggedIn = await _authService.isLoggedIn();
+      final userEmail = await _authService.getCurrentUserEmail();
+
+      if (!mounted) return;
+
+      if (isLoggedIn && userEmail != null) {
+        final favoriteModel = Provider.of<FavoriteModel>(context, listen: false);
+        final cartModel = Provider.of<CartModel>(context, listen: false);
+
+        await favoriteModel.setUser(userEmail);
+
+        Navigator.of(context).pushReplacement(PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 900),
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return const HomeScreen();
+          },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(0.0, 0.2);
+            const end = Offset.zero;
+            const curve = Curves.easeOutCubic;
+
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var fadeTween =
+                Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+
+            return FadeTransition(
+              opacity: animation.drive(fadeTween),
+              child: SlideTransition(
+                position: animation.drive(tween),
+                child: child,
+              ),
+            );
+          },
+        ));
+      } else {
+        Navigator.of(context).pushReplacement(PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 900),
+          pageBuilder: (context, animation, secondaryAnimation) {
+            return const AuthScreen();
+          },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(0.0, 0.2);
+            const end = Offset.zero;
+            const curve = Curves.easeOutCubic;
+
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            var fadeTween =
+                Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+
+            return FadeTransition(
+              opacity: animation.drive(fadeTween),
+              child: SlideTransition(
+                position: animation.drive(tween),
+                child: child,
+              ),
+            );
+          },
+        ));
+      }
+    }
+
+    @override
+    void dispose() {
+      _controller.dispose();
+      super.dispose();
+    }
+
+    Widget _buildAnimatedText() {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(_title.length, (index) {
+          final animation = Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(
+            CurvedAnimation(
+              parent: _controller,
+              curve: Interval(index * 0.1, 1.0, curve: Curves.elasticOut),
+            ),
+          );
+
+          final fade = CurvedAnimation(
             parent: _controller,
-            curve: Interval(index * 0.1, 1.0, curve: Curves.elasticOut),
-          ),
-        );
+            curve: Interval(index * 0.1, 1.0, curve: Curves.easeIn),
+          );
 
-        final fade = CurvedAnimation(
-          parent: _controller,
-          curve: Interval(index * 0.1, 1.0, curve: Curves.easeIn),
-        );
-
-        return SlideTransition(
-          position: animation,
-          child: FadeTransition(
-            opacity: fade,
-            child: Text(
-              _title[index],
-              style: TextStyle(
-                fontFamily: GoogleFonts.braahOne().fontFamily,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                letterSpacing: 1.5,
+          return SlideTransition(
+            position: animation,
+            child: FadeTransition(
+              opacity: fade,
+              child: Text(
+                _title[index],
+                style: TextStyle(
+                  fontFamily: GoogleFonts.braahOne().fontFamily,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  letterSpacing: 1.5,
+                ),
               ),
             ),
-          ),
-        );
-      }),
-    );
-  }
+          );
+        }),
+      );
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const Hero(
-                          tag: 'logo',
-                          child: Image(
-                            image: AssetImage('assets/images/logo.png'),
-                            height: 180,
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          const Hero(
+                            tag: 'logo',
+                            child: Image(
+                              image: AssetImage('assets/images/logo.png'),
+                              height: 180,
+                            ),
                           ),
-                        ),
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: Shimmer.fromColors(
-                              baseColor: Colors.transparent,
-                              // ignore: deprecated_member_use
-                              highlightColor: Colors.white.withOpacity(0.4),
-                              child: Container(
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Shimmer.fromColors(
+                                baseColor: Colors.transparent,
                                 // ignore: deprecated_member_use
-                                color: Colors.white.withOpacity(0.2),
+                                highlightColor: Colors.white.withOpacity(0.4),
+                                child: Container(
+                                  // ignore: deprecated_member_use
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Shimmer.fromColors(
-                      baseColor: Colors.black,
-                      highlightColor: Colors.blueGrey.shade200,
-                      child: _buildAnimatedText(),
-                    ),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Shimmer.fromColors(
+                        baseColor: Colors.black,
+                        highlightColor: Colors.blueGrey.shade200,
+                        child: _buildAnimatedText(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 20),
-              child: Text(
-                "by : muhammad dwi saputra",
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
+              const Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: Text(
+                  "by : muhammad dwi saputra",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
-}

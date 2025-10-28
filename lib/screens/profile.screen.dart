@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -163,13 +165,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          Consumer<CartModel>(
-            builder: (context, cart, child) {
+// --- BARU: StreamBuilder untuk Cart Badge ---
+          StreamBuilder<QuerySnapshot>(
+            // 1. Dapatkan UID pengguna saat ini
+            stream: (FirebaseAuth.instance.currentUser?.uid != null)
+                ? FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .collection('cart')
+                    .snapshots()
+                : null, // Stream null jika user logout
+            builder: (context, snapshot) {
+              int cartItemCount = 0; // Default 0
+
+              // 2. Hitung jumlah item jika ada data
+              if (snapshot.connectionState == ConnectionState.active &&
+                  snapshot.hasData) {
+                cartItemCount = snapshot.data!.docs.length;
+              }
+
+              // 3. Kembalikan IconButton dengan badge dinamis
               return IconButton(
                 icon: Stack(
                   children: [
                     Icon(Icons.shopping_cart, color: appBarIconColor),
-                    if (cart.items.isNotEmpty)
+                    if (cartItemCount > 0) // Gunakan cartItemCount
                       Positioned(
                         right: 0,
                         top: 0,
@@ -184,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             minHeight: 16,
                           ),
                           child: Text(
-                            '${cart.items.length}',
+                            '$cartItemCount', // Gunakan cartItemCount
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -206,6 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
+          // --- AKHIR StreamBuilder Cart Badge ---
         ],
       ),
       body: AnimatedContainer(

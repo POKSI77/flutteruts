@@ -1,10 +1,12 @@
 import 'package:bookstore_app/main.dart';
 import 'package:bookstore_app/screens/profile.screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/book.dart';
 import 'cart_screen.dart';
@@ -25,187 +27,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final List<Book> books = [
-    Book(
-      id: '1',
-      title: 'Seporsi Mie Ayam Sebelum Mati',
-      author: 'Brian Khrisna',
-      price: 80000,
-      imageUrl:
-          'https://images.weserv.nl/?url=image.gramedia.net/rs:fit:0:0/plain/https://cdn.gramedia.com/uploads/products/95ob5m98ur.jpg',
-      description:
-          'Kumpulan cerita pendek yang merenungkan tentang hidup, kematian, dan makna di balik momen-momen kecil yang tak terduga. Penulis mengajak kita menyelami pemikiran tokoh-tokohnya saat menghadapi titik krusial dalam hidup, seringkali dengan sentuhan melankolis namun penuh harapan, seperti kehangatan semangkuk mie ayam.',
-    ),
-    Book(
-      id: '2',
-      title: '3726',
-      author: 'A. Fuadi',
-      price: 50000,
-      imageUrl:
-          'https://images.weserv.nl/?url=cdn.gramedia.com/uploads/products/9397p4603v.jpg',
-      description:
-          'Dalam dunia masa depan yang diatur oleh sistem angka absolut, nasib setiap individu telah ditentukan. Seorang pemuda dengan nomor 3726 menolak takdirnya dan memulai perjuangan berbahaya untuk mencari arti kebebasan sejati, menentang sistem yang mengontrol segalanya.',
-      type: 'premium',
-      bonusPrice: 5000,
-    ),
-    Book(
-      id: '3',
-      title: 'Gerbang Dialog Danur',
-      author: 'Risa Saraswati',
-      price: 78000,
-      imageUrl:
-          'https://images.weserv.nl/?url=static.mizanstore.com/d/img/book/cover/covBK001247.jpg',
-      description:
-          'Berdasarkan pengalaman nyata penulis sebagai seorang indigo, buku ini membuka pintu ke dunia lain. Risa berbagi kisahnya berkomunikasi dengan teman-teman gaibnya—lima hantu anak Belanda—mengungkap tragedi masa lalu mereka dan ikatan unik yang terjalin.',
-    ),
-    Book(
-      id: '4',
-      title: 'Nineteen Eighty-Four (1984)',
-      author: 'George Orwell',
-      price: 110000,
-      imageUrl:
-          'https://images.weserv.nl/?url=cdn.gramedia.com/uploads/products/8n-45t7t60.jpg',
-      description:
-          'Sebuah novel distopia klasik yang mengerikan tentang dunia totaliter Oceania, di mana Partai mengontrol setiap aspek kehidupan di bawah pengawasan Big Brother. Winston Smith memulai pemberontakan pribadi yang berbahaya terhadap rezim yang menindas pikiran dan kebenaran.',
-      discountPercentage: 15,
-    ),
-    Book(
-      id: '5',
-      title: 'The Catcher in the Rye',
-      author: 'J.D. Salinger',
-      price: 87000,
-      imageUrl:
-          'https://images.weserv.nl/npr.brightspotcdn.com/dims4/default/48e622e/2147483647/strip/true/crop/363x574+0+0/resize/1760x2784!/format/webp/quality/90/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Flegacy%2Fsites%2Fwkar%2Ffiles%2Fcatcher_in_the_rye_cover.png',
-      description:
-          'Novel klasik Amerika tentang kegelisahan remaja melalui sudut pandang Holden Caulfield yang sinis dan pemberontak. Setelah dikeluarkan dari sekolah, ia menghabiskan beberapa hari di New York, merenungkan kepalsuan dunia dewasa, kehilangan, dan pencarian makna hidup.',
-    ),
-    Book(
-      id: '6',
-      title: 'Bumi Manusia',
-      author: 'Pramoedya Ananta Toer',
-      price: 95000,
-      imageUrl:
-          'https://images.weserv.nl/?url=https://upload.wikimedia.org/wikipedia/id/thumb/5/51/Bumi_Manusia_poster.jpg/500px-Bumi_Manusia_poster.jpg',
-      description:
-          'Bagian pertama dari Tetralogi Buru yang legendaris, berlatar Hindia Belanda awal abad ke-20. Mengisahkan Minke, seorang priyayi Jawa terpelajar, yang jatuh cinta pada Annelies Mellema, seorang Indo-Belanda, dan harus menghadapi konflik rasial, sosial, dan politik era kolonial.',
-    ),
-    Book(
-      id: '7',
-      title: 'Laskar Pelangi',
-      author: 'Andrea Hirata',
-      price: 70000,
-      imageUrl:
-          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/id/8/8e/Laskar_pelangi_sampul.jpg',
-      description:
-          'Kisah inspiratif tentang sepuluh anak dari keluarga miskin di Pulau Belitong yang bersekolah di SD Muhammadiyah Gantong yang hampir rubuh. Dipimpin oleh Ikal dan Lintang yang jenius, mereka berjuang meraih mimpi melalui pendidikan dengan semangat persahabatan yang kuat.',
-    ),
-    Book(
-      id: '8',
-      title: 'The Hobbit',
-      author: 'J.R.R. Tolkien',
-      price: 135000,
-      imageUrl:
-          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/4/4a/TheHobbit_FirstEdition.jpg/220px-TheHobbit_FirstEdition.jpg',
-      description:
-          'Petualangan epik Bilbo Baggins, seorang hobbit yang mencintai kenyamanan rumahnya, saat ia secara tak terduga direkrut oleh penyihir Gandalf dan tiga belas kurcaci untuk melakukan perjalanan berbahaya merebut kembali harta karun yang dicuri oleh naga Smaug di Lonely Mountain.',
-    ),
-    Book(
-      id: '9',
-      title: 'Negeri 5 Menara',
-      author: 'Ahmad Fuadi',
-      price: 75000,
-      imageUrl:
-          'https://images.weserv.nl/?url=s3-ap-southeast-1.amazonaws.com/ebook-previews/1682/10530/1.jpg',
-      description:
-          'Terinspirasi dari kisah nyata, novel ini mengikuti perjalanan Alif Fikri dari Minangkabau ke Pondok Madani Gontor di Jawa Timur. Bersama lima sahabatnya, ia belajar tentang disiplin, persahabatan, impian, dan kekuatan mantra "Man Jadda Wajada" (Siapa yang bersungguh-sungguh akan berhasil).',
-    ),
-    Book(
-      id: '10',
-      title: 'Supernova: KPBJ',
-      author: 'Dee Lestari',
-      price: 110000,
-      imageUrl:
-          'https://images.weserv.nl/?url=static.mizanstore.com/d/img/book/cover/covBT-533.jpg',
-      description:
-          'Buku pertama dari seri fiksi ilmiah-filosofis Supernova. Dua pasangan gay, Reuben dan Dimas, menciptakan cerita fiksi tentang Ksatria, Puteri, dan Bintang Jatuh yang ternyata memiliki keterkaitan misterius dengan tokoh nyata bernama Ferre, Rana, dan Diva.',
-      type: 'premium',
-      bonusPrice: 7500,
-    ),
-    Book(
-      id: '11',
-      title: 'The Da Vinci Code',
-      author: 'Dan Brown',
-      price: 150000,
-      imageUrl:
-          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/6/6b/DaVinciCode.jpg/220px-DaVinciCode.jpg',
-      description:
-          'Sebuah thriller misteri yang mendebarkan. Simbolog Harvard, Robert Langdon, terlibat dalam penyelidikan pembunuhan di Louvre yang membawanya mengungkap konspirasi kuno terkait Holy Grail, tersembunyi dalam karya seni Leonardo da Vinci dan sejarah rahasia Kekristenan.',
-      discountPercentage: 20,
-    ),
-    Book(
-      id: '12',
-      title: 'Cantik Itu Luka',
-      author: 'Eka Kurniawan',
-      price: 88000,
-      imageUrl:
-          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/id/d/d2/CiL_%28sampul%29.jpg',
-      description:
-          'Sebuah novel epik yang memadukan sejarah Indonesia dari era kolonial hingga Orde Baru dengan unsur realisme magis, kekerasan, dan humor gelap. Mengisahkan kehidupan tragis Dewi Ayu dan keempat putrinya di kota fiksi Halimunda.',
-      discountPercentage: 10,
-    ),
-    Book(
-      id: '13',
-      title: 'Harry Potter and the Sorcerer\'s Stone',
-      author: 'J.K. Rowling',
-      price: 150000,
-      imageUrl:
-          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/6/6b/Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg/220px-Harry_Potter_and_the_Philosopher%27s_Stone_Book_Cover.jpg',
-      description:
-          'Buku pertama yang memperkenalkan dunia sihir Harry Potter. Harry, seorang yatim piatu yang tinggal bersama paman dan bibinya yang kejam, mengetahui di ulang tahunnya yang kesebelas bahwa ia adalah seorang penyihir dan diundang ke Sekolah Sihir Hogwarts.',
-      type: 'premium',
-      bonusPrice: 7500,
-    ),
-    Book(
-      id: '14',
-      title: 'To Kill a Mockingbird',
-      author: 'Harper Lee',
-      price: 120000,
-      imageUrl:
-          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/4/4f/To_Kill_a_Mockingbird_%28first_edition_cover%29.jpg/220px-To_Kill_a_Mockingbird_%28first_edition_cover%29.jpg',
-      description:
-          'Novel klasik Amerika pemenang Pulitzer Prize, berlatar Depresi Besar di Alabama. Diceritakan melalui mata Scout Finch, novel ini mengeksplorasi tema rasisme, prasangka, dan moralitas saat ayahnya, pengacara Atticus Finch, membela Tom Robinson, seorang pria kulit hitam yang dituduh secara salah.',
-    ),
-    Book(
-      id: '15',
-      title: 'The Little Prince',
-      author: 'Antoine de Saint-Exupéry',
-      price: 90000,
-      imageUrl:
-          'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/en/thumb/0/05/Littleprince.JPG/220px-Littleprince.JPG',
-      description:
-          'Kisah puitis dan filosofis tentang seorang pilot yang pesawatnya jatuh di Gurun Sahara dan bertemu dengan seorang anak laki-laki misterius, Pangeran Kecil, yang berasal dari asteroid kecil. Melalui percakapan mereka, buku ini membahas tema kesepian, persahabatan, cinta, kehilangan, dan makna hidup.',
-    ),
-  ];
-
+class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMixin {
   String _searchQuery = '';
-
-  List<Book> get _filteredBooks {
-    if (_searchQuery.trim().isEmpty) return books;
-    final q = _searchQuery.toLowerCase();
-    return books.where((b) {
-      return b.title.toLowerCase().contains(q) ||
-          b.author.toLowerCase().contains(q);
-    }).toList();
-  }
-
-  List<Book> get _regularBooks => books
-      .where((b) => !b.isDiscounted && b.type.toLowerCase() != 'premium')
-      .toList();
-  List<Book> get _premiumBooks => books
-      .where((b) => !b.isDiscounted && b.type.toLowerCase() == 'premium')
-      .toList();
-  List<Book> get _saleBooks => books.where((b) => b.isDiscounted).toList();
+  @override
+  bool get wantKeepAlive => true;
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -236,8 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
+    super.build(context);
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final isDarkMode = themeNotifier.isDark;
     final favoriteModel = Provider.of<FavoriteModel>(context);
@@ -331,13 +157,31 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          Consumer<CartModel>(
-            builder: (context, cart, child) {
+// --- BARU: StreamBuilder untuk Cart Badge ---
+          StreamBuilder<QuerySnapshot>(
+            // 1. Dapatkan UID pengguna saat ini
+            stream: (FirebaseAuth.instance.currentUser?.uid != null)
+                ? FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .collection('cart')
+                    .snapshots()
+                : null, // Stream null jika user logout
+            builder: (context, snapshot) {
+              int cartItemCount = 0; // Default 0
+
+              // 2. Hitung jumlah item jika ada data
+              if (snapshot.connectionState == ConnectionState.active &&
+                  snapshot.hasData) {
+                cartItemCount = snapshot.data!.docs.length;
+              }
+
+              // 3. Kembalikan IconButton dengan badge dinamis
               return IconButton(
                 icon: Stack(
                   children: [
                     Icon(Icons.shopping_cart, color: appBarIconColor),
-                    if (cart.items.isNotEmpty)
+                    if (cartItemCount > 0) // Gunakan cartItemCount
                       Positioned(
                         right: 0,
                         top: 0,
@@ -352,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             minHeight: 16,
                           ),
                           child: Text(
-                            '${cart.items.length}',
+                            '$cartItemCount', // Gunakan cartItemCount
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -374,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+          // --- AKHIR StreamBuilder Cart Badge ---
           IconButton(
             icon: const Icon(Icons.person),
             color: appBarIconColor,
@@ -386,80 +231,166 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+
+      // --- INI ADALAH BAGIAN YANG DIUBAH ---
       body: AnimatedContainer(
         duration: const Duration(milliseconds: 500),
         color: bodyBackgroundColor,
-        child: ScrollConfiguration(
-          behavior: NoGlowBehavior(),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    _welcomeMessage ?? 'Loading...',
-                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ).animate().slide(
-                        begin: const Offset(-1, 0),
-                        end: Offset.zero,
-                        duration: 500.ms,
-                        curve: Curves.easeOut,
-                      ),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: TextField(
-                    onChanged: (v) => setState(() => _searchQuery = v),
-                    decoration: InputDecoration(
-                      hintText: 'Cari judul atau penulis...',
-                      prefixIcon: Icon(Icons.search,
-                          color: isDarkMode ? Colors.white70 : Colors.black54),
-                      hintStyle: TextStyle(
-                          color: isDarkMode ? Colors.white70 : Colors.black54),
-                      filled: true,
-                      fillColor: isDarkMode
-                          // ignore: deprecated_member_use
-                          ? Colors.white.withOpacity(0.1)
-                          // ignore: deprecated_member_use
-                          : Colors.grey.withOpacity(0.1),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
+        child: Column( // 1. Body utama sekarang adalah Column
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 2. Welcome Message ada DI LUAR StreamBuilder
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                _welcomeMessage ?? 'Loading...',
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold,
                     ),
-                    style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black),
+              ).animate().slide(
+                    begin: const Offset(-1, 0),
+                    end: Offset.zero,
+                    duration: 500.ms,
+                    curve: Curves.easeOut,
+                  ),
+            ),
+            
+            // 3. Search Bar ada DI LUAR StreamBuilder
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: TextField(
+                onChanged: (v) => setState(() => _searchQuery = v), // setState sekarang aman
+                decoration: InputDecoration(
+                  hintText: 'Cari judul atau penulis...',
+                  prefixIcon: Icon(Icons.search,
+                      color: isDarkMode ? Colors.white70 : Colors.black54),
+                  hintStyle: TextStyle(
+                      color: isDarkMode ? Colors.white70 : Colors.black54),
+                  filled: true,
+                  fillColor: isDarkMode
+                      // ignore: deprecated_member_use
+                      ? Colors.white.withOpacity(0.1)
+                      // ignore: deprecated_member_use
+                      : Colors.grey.withOpacity(0.1),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
-
-                // Logika pencarian/tampilan buku
-                if (_searchQuery.trim().isNotEmpty)
-                  if (_filteredBooks.isEmpty)
-                    _buildNotFoundWidget(context, isDarkMode)
-                  else
-                    _buildBookSection('Hasil Pencarian', _filteredBooks,
-                        isDarkMode, favoriteModel)
-                else ...[
-                  _buildBookSection(
-                      'Reguler', _regularBooks, isDarkMode, favoriteModel),
-                  _buildBookSection(
-                      'Premium', _premiumBooks, isDarkMode, favoriteModel),
-                  _buildBookSection(
-                      'Diskon', _saleBooks, isDarkMode, favoriteModel),
-                ],
-              ],
+                style:
+                    TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+              ),
             ),
-          ),
+
+            // 4. StreamBuilder sekarang HANYA untuk daftar buku
+            Expanded( // Dibungkus Expanded agar mengisi sisa ruang
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection('books').snapshots(),
+                builder: (context, snapshot) {
+                  
+                  // --- Handle Status Loading ---
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: isDarkMode ? Colors.white : Colors.blueAccent,
+                      ),
+                    );
+                  }
+
+                  // --- Handle Status Error ---
+                  if (snapshot.hasError) {
+                    return Center(
+                        child: Text('Terjadi error: ${snapshot.error}',
+                            style: TextStyle(
+                                color: isDarkMode ? Colors.white : Colors.black)));
+                  }
+
+                  // --- Handle Status Tidak Ada Data ---
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(
+                        child: Text('Belum ada buku di database.',
+                            style: TextStyle(
+                                color: isDarkMode ? Colors.white : Colors.black)));
+                  }
+
+                  // --- 6. SUKSES! (Kode aman dari sebelumnya) ---
+                  final List<Book> allBooks = snapshot.data!.docs.map((doc) {
+                    final dynamic docData = doc.data();
+                    if (docData == null || docData is! Map<String, dynamic>) {
+                      return null;
+                    }
+                    Map<String, dynamic> data = docData;
+                    data['id'] = doc.id;
+                    return Book.fromJson(data);
+                  }).whereType<Book>().toList();
+
+
+                  // --- 7. Logika Filtering (Sudah benar) ---
+                  final List<Book> filteredBooks;
+                  if (_searchQuery.trim().isEmpty) {
+                    filteredBooks = []; // Dikosongkan, karena akan tampil kategori
+                  } else {
+                    final q = _searchQuery.toLowerCase();
+                    filteredBooks = allBooks.where((b) {
+                      return b.title.toLowerCase().contains(q) ||
+                          b.author.toLowerCase().contains(q);
+                    }).toList();
+                  }
+
+                  final List<Book> regularBooks = allBooks
+                      .where((b) => !b.isDiscounted && b.type.toLowerCase() != 'premium')
+                      .toList();
+                  final List<Book> premiumBooks = allBooks
+                      .where((b) => !b.isDiscounted && b.type.toLowerCase() == 'premium')
+                      .toList();
+                  final List<Book> saleBooks =
+                      allBooks.where((b) => b.isDiscounted).toList();
+
+
+                  // --- 8. Kembalikan HANYA list yang bisa di-scroll ---
+                  return ScrollConfiguration(
+                    behavior: NoGlowBehavior(),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // (Welcome message & Search bar sudah dipindah ke atas)
+
+                          // Logika pencarian/tampilan buku
+                          if (_searchQuery.trim().isNotEmpty)
+                            if (filteredBooks.isEmpty)
+                              _buildNotFoundWidget(context, isDarkMode)
+                            else
+                              _buildBookSection('Hasil Pencarian', filteredBooks,
+                                  isDarkMode, favoriteModel)
+                          else ...[
+                            // Tampilkan kategori jika search bar kosong
+                            _buildBookSection('Reguler', regularBooks, isDarkMode,
+                                favoriteModel),
+                            _buildBookSection('Premium', premiumBooks, isDarkMode,
+                                favoriteModel),
+                            _buildBookSection(
+                                'Diskon', saleBooks, isDarkMode, favoriteModel),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  //
+  // FUNGSI HELPER HARUS ADA DI SINI:
+  // (DI LUAR 'build', TAPI DI DALAM '_HomeScreenState')
+  //
   Widget _buildBookSection(String title, List<Book> books, bool isDarkMode,
       FavoriteModel favoriteModel) {
     if (books.isEmpty) {
@@ -539,14 +470,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-}
-
-// HELPER CLASS
-class NoGlowBehavior extends ScrollBehavior {
-  @override
-  Widget buildOverscrollIndicator(
-      BuildContext context, Widget child, ScrollableDetails details) {
-    return child;
   }
 }

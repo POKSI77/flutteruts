@@ -1,21 +1,78 @@
-# Welcome to Cloud Functions for Firebase for Python!
-# To get started, simply uncomment the below code or create your own.
-# Deploy with `firebase deploy`
+import firebase_admin
+from firebase_admin import credentials, firestore
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional
 
-from firebase_functions import https_fn
-from firebase_functions.options import set_global_options
-from firebase_admin import initialize_app
+# --- Konfigurasi Firebase ---
 
-# For cost control, you can set the maximum number of containers that can be
-# running at the same time. This helps mitigate the impact of unexpected
-# traffic spikes by instead downgrading performance. This limit is a per-function
-# limit. You can override the limit for each function using the max_instances
-# parameter in the decorator, e.g. @https_fn.on_request(max_instances=5).
-set_global_options(max_instances=10)
+# 1. Muat Kredensial Admin
+# Ini mengasumsikan 'serviceAccountKey.json' ada di folder 'poksi/'
+# Seperti yang terlihat di screenshot Anda, path 'poksi/serviceAccountKey.json' sudah benar.
+try:
+    cred = credentials.Certificate("serviceAccountKey.json")
+except FileNotFoundError:
+    print("KESALAHAN: File 'poksi/serviceAccountKey.json' tidak ditemukan.")
+    print("Silakan unduh dari Firebase Console dan letakkan di folder 'poksi'.")
+    exit()
 
-# initialize_app()
-#
-#
-# @https_fn.on_request()
-# def on_request_example(req: https_fn.Request) -> https_fn.Response:
-#     return https_fn.Response("Hello world!")
+# 2. Inisialisasi Aplikasi Firebase
+firebase_admin.initialize_app(cred)
+
+# 3. Dapatkan Klien Database Firestore
+db = firestore.client()
+
+# --- Definisi Aplikasi FastAPI ---
+
+# 4. Buat aplikasi FastAPI Anda
+app = FastAPI()
+
+# --- Model Data (Opsional tapi bagus) ---
+# Ini membantu FastAPI memvalidasi data
+class Book(BaseModel):
+    title: str
+    author: str
+    description: str
+    imageUrl: str
+    price: float
+    type: Optional[str] = 'normal' # Default 'normal' jika tidak diisi
+    bonusPrice: Optional[float] = 0  # Default 0 jika tidak diisi
+    discountPercentage: Optional[int] = 0  # int untuk persentase diskon
+
+# --- Endpoint API Anda ---
+
+@app.get("/")
+def read_root():
+    """Endpoint dasar untuk memeriksa apakah API berjalan."""
+    return {"message": "Selamat datang di Poksi API!"}
+
+@app.get("/books")
+async def get_books():
+    """Mengambil semua buku dari koleksi 'books' di Firestore."""
+    try:
+        books_ref = db.collection('books')
+        docs = books_ref.stream()
+
+        books_list = []
+        for doc in docs:
+            book_data = doc.to_dict()
+            book_data['id'] = doc.id  # Tambahkan ID dokumen ke data
+            books_list.append(book_data)
+            
+        return books_list
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/books")
+async def create_book(book: Book):
+    """Menambahkan buku baru ke koleksi 'books'."""
+    try:
+        # Pydantic model diubah kembali ke dict untuk Firestore
+        book_data = book.dict()
+        
+        # Tambahkan dokumen baru dengan ID yang dibuat otomatis
+        doc_ref = db.collection('books').add(book_data)
+        
+        return {"message": "Buku berhasil ditambahkan", "id": doc_ref[1].id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
